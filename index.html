@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>W.F.Fukuta | Projetos</title>
+
+  <style>
+    :root {
+      --bg-body: #0d1117;
+      --bg-card: #161b22;
+      --border-color: #30363d;
+      --text-main: #c9d1d9;
+      --text-muted: #8b949e;
+      --link-color: #58a6ff;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      margin: 0;
+    }
+
+    header {
+      padding: 32px 16px;
+      text-align: center;
+      border-bottom: 1px solid var(--border-color);
+      background-color: var(--bg-card);
+    }
+
+    main {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 32px 16px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 16px;
+      transition: border-color 0.2s;
+    }
+
+    .card h2 { font-size: 16px; color: var(--link-color); margin-bottom: 8px; }
+    .row { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
+    
+    .status-msg {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+      grid-column: 1 / -1;
+    }
+
+    .error-log {
+      color: #ff7b72;
+      background: rgba(248, 81, 73, 0.1);
+      padding: 10px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>W.F.FUKUTA</h1>
+  <p>Projetos em Desenvolvimento</p>
+</header>
+
+<main>
+  <div class="grid" id="lista">
+    <div class="status-msg" id="status-text">Carregando dados da planilha...</div>
+  </div>
+</main>
+
+<script>
+// Sua URL do Google Sheets (TSV)
+const URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTWPZAcT8ZfbRTSlM-89fg5gHQaK5XGiL1TpTbMHvv7OZV4fOIYjHH2-HjOpEBgdwrp0ayJMv2Bpw6i/pub?gid=519673108&single=true&output=tsv';
+
+const container = document.getElementById('lista');
+const statusText = document.getElementById('status-text');
+
+fetch(URL)
+  .then(response => {
+    if (!response.ok) throw new Error('A planilha não respondeu corretamente (Erro: ' + response.status + ')');
+    return response.text();
+  })
+  .then(tsv => {
+    // Limpa o texto de "Carregando"
+    container.innerHTML = '';
+
+    const linhas = tsv.trim().split('\n');
+    
+    // Se a planilha estiver vazia (só o cabeçalho ou nada)
+    if (linhas.length <= 1) {
+      container.innerHTML = '<div class="status-msg">Nenhum projeto encontrado na planilha.</div>';
+      return;
+    }
+
+    linhas.shift(); // Remove o cabeçalho
+
+    linhas.forEach((linha, index) => {
+      const colunas = linha.split('\t');
+      
+      // Mapeia as colunas (Ajuste a ordem se necessário)
+      const projeto = colunas[0] || 'Sem Nome';
+      const genero = colunas[1] || '-';
+      const status = colunas[2] || '-';
+      const suporte = colunas[3] || '-';
+      const ferramentas = colunas[4] || '-';
+
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <h2>${projeto}</h2>
+        <div class="row"><strong>Gênero:</strong> ${genero}</div>
+        <div class="row"><strong>Status:</strong> ${status}</div>
+        <div class="row"><strong>Ferramentas:</strong> ${ferramentas}</div>
+        <div class="row"><strong>Suporte:</strong> ${suporte}</div>
+      `;
+      container.appendChild(card);
+    });
+  })
+  .catch(err => {
+    statusText.innerHTML = `
+      <div>❌ Erro ao carregar</div>
+      <div class="error-log">${err.message}</div>
+      <p style="font-size:12px; margin-top:10px">Verifique se a planilha está "Publicada na Web" como TSV.</p>
+    `;
+    console.error("Erro detalhado:", err);
+  });
+</script>
+
+</body>
+</html>
