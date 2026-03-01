@@ -83,6 +83,38 @@
   </div>
 </main>
 
+
+
+
+<script>
+  // Função para gerenciar o redirecionamento
+  function redirectByHash() {
+    const hash = window.location.hash;
+
+    // Mapeamento de destinos
+    const routes = {
+      '#github': 'https://www.google.com',
+      '#vinhadinho': 'https://www.facebook.com'
+    };
+
+    // Verifica se o hash atual existe no nosso mapeamento
+    if (routes[hash]) {
+      window.location.href = routes[hash];
+    }
+  }
+
+  // Executa assim que a página carrega
+  window.addEventListener('load', redirectByHash);
+
+  // Opcional: Executa se o usuário mudar o hash sem recarregar a página
+  window.addEventListener('hashchange', redirectByHash);
+</script>
+
+
+
+
+  
+  
 <script>
 // Sua URL do Google Sheets (TSV)
 const URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTWPZAcT8ZfbRTSlM-89fg5gHQaK5XGiL1TpTbMHvv7OZV4fOIYjHH2-HjOpEBgdwrp0ayJMv2Bpw6i/pub?gid=519673108&single=true&output=tsv';
