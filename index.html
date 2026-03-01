@@ -208,8 +208,6 @@ fetch(URL)
       const suporte = (colunas[3] || '-').trim();
       const descricao = colunas[4] || '-';
       const usaFormatoExpandido = colunas.length >= 8;
-      const stack = usaFormatoExpandido ? (colunas[5] || '-') : '-';
-      const resultado = usaFormatoExpandido ? (colunas[6] || '-') : '-';
       const linkProducao = (usaFormatoExpandido ? colunas[7] : colunas[5] || '').trim();
       const botaoLink = linkProducao
         ? `<a class="project-link" href="${linkProducao}" target="_blank" rel="noopener noreferrer">Acessar projeto</a>`
@@ -233,8 +231,6 @@ fetch(URL)
         <div class="row"><strong>Gênero:</strong> ${genero}</div>
         <div class="row"><strong>Status:</strong> ${status}</div>
         <div class="row"><strong>Suporte:</strong> ${suporte}</div>
-        <div class="row"><strong>Stack:</strong> ${stack}</div>
-        <div class="row"><strong>Resultado:</strong> ${resultado}</div>
         <div class="row"><strong>Descrição:</strong> ${descricao}</div>
         ${botaoLink}
       `;
