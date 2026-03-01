@@ -29,6 +29,28 @@
       background-color: var(--bg-card);
     }
 
+    .about {
+      margin: 0 auto 24px auto;
+      max-width: 780px;
+      padding: 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background-color: var(--bg-card);
+    }
+
+    .about h2 {
+      margin: 0 0 8px 0;
+      font-size: 18px;
+      color: var(--link-color);
+    }
+
+    .about p {
+      margin: 0;
+      color: var(--text-main);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
     main {
       max-width: 1000px;
       margin: 0 auto;
@@ -49,7 +71,7 @@
       transition: border-color 0.2s;
     }
 
-    .card--suporte-outro {
+    .card--suporte-sim {
       border-color: #3fb950;
     }
 
@@ -63,6 +85,7 @@
 
     .card h2 { font-size: 16px; color: var(--link-color); margin-bottom: 8px; }
     .row { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
+    .row strong { color: var(--link-color); }
 
     .project-link {
       display: inline-block;
@@ -107,6 +130,11 @@
 </header>
 
 <main>
+  <section class="about" aria-label="Sobre mim">
+    <h2>Sobre mim</h2>
+    <p>Sou engenheiro de software focado em criar produtos digitais com qualidade, performance e boa experiência para o usuário. Neste portfólio compartilho projetos práticos, evolução técnica e soluções que transformam ideias em entregas reais.</p>
+  </section>
+
   <div class="grid" id="lista">
     <div class="status-msg" id="status-text">Carregando dados da planilha...</div>
   </div>
@@ -178,8 +206,11 @@ fetch(URL)
       const genero = colunas[1] || '-';
       const status = colunas[2] || '-';
       const suporte = (colunas[3] || '-').trim();
-      const ferramentas = colunas[4] || '-';
-      const linkProducao = (colunas[5] || '').trim();
+      const descricao = colunas[4] || '-';
+      const usaFormatoExpandido = colunas.length >= 8;
+      const stack = usaFormatoExpandido ? (colunas[5] || '-') : '-';
+      const resultado = usaFormatoExpandido ? (colunas[6] || '-') : '-';
+      const linkProducao = (usaFormatoExpandido ? colunas[7] : colunas[5] || '').trim();
       const botaoLink = linkProducao
         ? `<a class="project-link" href="${linkProducao}" target="_blank" rel="noopener noreferrer">Acessar projeto</a>`
         : '';
@@ -188,12 +219,12 @@ fetch(URL)
       const suporteNormalizado = suporte.toUpperCase();
       let classeSuporte = '';
 
-      if (suporteNormalizado === 'NÃO' || suporteNormalizado === 'NAO') {
+      if (suporteNormalizado === 'SIM') {
+        classeSuporte = 'card--suporte-sim';
+      } else if (suporteNormalizado === 'NÃO' || suporteNormalizado === 'NAO') {
         classeSuporte = 'card--suporte-nao';
       } else if (suporteNormalizado === 'EM BREVE') {
         classeSuporte = 'card--suporte-em-breve';
-      } else if (suporteNormalizado !== 'SIM') {
-        classeSuporte = 'card--suporte-outro';
       }
 
       card.className = `card ${classeSuporte}`.trim();
@@ -201,8 +232,10 @@ fetch(URL)
         <h2>${projeto}</h2>
         <div class="row"><strong>Gênero:</strong> ${genero}</div>
         <div class="row"><strong>Status:</strong> ${status}</div>
-        <div class="row"><strong>Descrição:</strong> ${ferramentas}</div>
         <div class="row"><strong>Suporte:</strong> ${suporte}</div>
+        <div class="row"><strong>Stack:</strong> ${stack}</div>
+        <div class="row"><strong>Resultado:</strong> ${resultado}</div>
+        <div class="row"><strong>Descrição:</strong> ${descricao}</div>
         ${botaoLink}
       `;
       container.appendChild(card);
