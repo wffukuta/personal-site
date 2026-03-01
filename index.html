@@ -49,8 +49,37 @@
       transition: border-color 0.2s;
     }
 
+    .card--suporte-outro {
+      border-color: #3fb950;
+    }
+
+    .card--suporte-nao {
+      border-color: #ff7b72;
+    }
+
+    .card--suporte-em-breve {
+      border-color: #d29922;
+    }
+
     .card h2 { font-size: 16px; color: var(--link-color); margin-bottom: 8px; }
     .row { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
+
+    .project-link {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 8px 12px;
+      background: var(--link-color);
+      color: #0d1117;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 6px;
+      transition: filter 0.2s;
+    }
+
+    .project-link:hover {
+      filter: brightness(1.1);
+    }
     
     .status-msg {
       text-align: center;
@@ -148,17 +177,33 @@ fetch(URL)
       const projeto = colunas[0] || 'Sem Nome';
       const genero = colunas[1] || '-';
       const status = colunas[2] || '-';
-      const suporte = colunas[3] || '-';
+      const suporte = (colunas[3] || '-').trim();
       const ferramentas = colunas[4] || '-';
+      const linkProducao = (colunas[5] || '').trim();
+      const botaoLink = linkProducao
+        ? `<a class="project-link" href="${linkProducao}" target="_blank" rel="noopener noreferrer">Acessar projeto</a>`
+        : '';
 
       const card = document.createElement('div');
-      card.className = 'card';
+      const suporteNormalizado = suporte.toUpperCase();
+      let classeSuporte = '';
+
+      if (suporteNormalizado === 'NÃO' || suporteNormalizado === 'NAO') {
+        classeSuporte = 'card--suporte-nao';
+      } else if (suporteNormalizado === 'EM BREVE') {
+        classeSuporte = 'card--suporte-em-breve';
+      } else if (suporteNormalizado !== 'SIM') {
+        classeSuporte = 'card--suporte-outro';
+      }
+
+      card.className = `card ${classeSuporte}`.trim();
       card.innerHTML = `
         <h2>${projeto}</h2>
         <div class="row"><strong>Gênero:</strong> ${genero}</div>
         <div class="row"><strong>Status:</strong> ${status}</div>
         <div class="row"><strong>Descrição:</strong> ${ferramentas}</div>
         <div class="row"><strong>Suporte:</strong> ${suporte}</div>
+        ${botaoLink}
       `;
       container.appendChild(card);
     });
