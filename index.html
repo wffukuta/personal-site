@@ -147,35 +147,29 @@
       overflow: hidden;
       box-shadow:
         0 20px 45px rgba(0, 0, 0, 0.7),
-        0 0 90px rgba(255, 0, 0, 0.2),
-        0 0 140px rgba(255, 0, 0, 0.1);
+        0 0 90px rgba(88, 166, 255, 0.35),
+        0 0 140px rgba(88, 166, 255, 0.2);
     }
 
     .video-modal.open {
       display: block;
     }
 
-    .video-modal__header {
-      height: 34px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 10px;
-      background: linear-gradient(180deg, rgba(35, 35, 35, 0.95), rgba(12, 12, 12, 0.95));
-      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-      color: #f1f1f1;
-      font-size: 12px;
-      user-select: none;
-    }
-
     .video-modal__close {
+      position: absolute;
+      top: 8px;
+      right: 10px;
       border: none;
-      background: transparent;
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      background: rgba(13, 17, 23, 0.85);
       color: #f1f1f1;
-      font-size: 18px;
+      font-size: 20px;
       line-height: 1;
       cursor: pointer;
       padding: 0;
+      z-index: 2;
     }
 
     .video-modal__resize {
@@ -192,7 +186,7 @@
 
     .video-modal iframe {
       width: 100%;
-      height: calc(100% - 34px);
+      height: 100%;
       border: 0;
       display: block;
     }
@@ -233,12 +227,9 @@
   </div>
 </main>
 
-<div class="video-modal" id="video-modal" aria-hidden="true">
+<div class="video-modal" id="video-modal" aria-hidden="true" hidden>
   <div class="video-modal__resize" id="video-resize" aria-label="Redimensionar janela"></div>
-  <div class="video-modal__header">
-    <span>YouTube</span>
-    <button class="video-modal__close" id="video-close" aria-label="Fechar vídeo">×</button>
-  </div>
+  <button class="video-modal__close" id="video-close" aria-label="Fechar vídeo">×</button>
   <iframe id="video-frame" title="Player do YouTube" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 </div>
 
@@ -352,6 +343,7 @@ function openVideoEmbed(url) {
   if (!embedUrl) return;
 
   videoFrame.src = embedUrl;
+  videoModal.hidden = false;
   videoModal.classList.add('open');
   videoModal.setAttribute('aria-hidden', 'false');
 }
@@ -359,6 +351,7 @@ function openVideoEmbed(url) {
 function closeVideoEmbed() {
   videoModal.classList.remove('open');
   videoModal.setAttribute('aria-hidden', 'true');
+  videoModal.hidden = true;
   videoFrame.src = '';
 }
 
@@ -409,6 +402,7 @@ videoResize.addEventListener('pointerdown', event => {
 });
 
 positionModalBottomRight();
+closeVideoEmbed();
 
 fetch(URL)
   .then(response => {
