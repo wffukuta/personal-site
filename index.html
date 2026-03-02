@@ -103,6 +103,99 @@
     .project-link:hover {
       filter: brightness(1.1);
     }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      width: 100%;
+    }
+
+    .video-link {
+      margin-left: auto;
+      width: 38px;
+      height: 38px;
+      border: none;
+      border-radius: 999px;
+      background: var(--link-color);
+      color: #0d1117;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: filter 0.2s, transform 0.2s;
+    }
+
+    .video-link:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    .video-link svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .video-modal {
+      position: fixed;
+      z-index: 1000;
+      display: none;
+      background: #000;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow:
+        0 20px 45px rgba(0, 0, 0, 0.7),
+        0 0 90px rgba(255, 0, 0, 0.2),
+        0 0 140px rgba(255, 0, 0, 0.1);
+    }
+
+    .video-modal.open {
+      display: block;
+    }
+
+    .video-modal__header {
+      height: 34px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 10px;
+      background: linear-gradient(180deg, rgba(35, 35, 35, 0.95), rgba(12, 12, 12, 0.95));
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+      color: #f1f1f1;
+      font-size: 12px;
+      user-select: none;
+    }
+
+    .video-modal__close {
+      border: none;
+      background: transparent;
+      color: #f1f1f1;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .video-modal__resize {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 16px;
+      height: 16px;
+      cursor: nwse-resize;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0 25%, transparent 25% 100%);
+      z-index: 2;
+    }
+
+    .video-modal iframe {
+      width: 100%;
+      height: calc(100% - 34px);
+      border: 0;
+      display: block;
+    }
     
     .status-msg {
       text-align: center;
@@ -139,6 +232,15 @@
     <div class="status-msg" id="status-text">Carregando dados da planilha...</div>
   </div>
 </main>
+
+<div class="video-modal" id="video-modal" aria-hidden="true">
+  <div class="video-modal__resize" id="video-resize" aria-label="Redimensionar janela"></div>
+  <div class="video-modal__header">
+    <span>YouTube</span>
+    <button class="video-modal__close" id="video-close" aria-label="Fechar vídeo">×</button>
+  </div>
+  <iframe id="video-frame" title="Player do YouTube" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+</div>
 
 
 
@@ -178,6 +280,158 @@ const URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTWPZAcT8ZfbRTSlM-8
 
 const container = document.getElementById('lista');
 const statusText = document.getElementById('status-text');
+const videoModal = document.getElementById('video-modal');
+const videoFrame = document.getElementById('video-frame');
+const videoClose = document.getElementById('video-close');
+const videoResize = document.getElementById('video-resize');
+
+const modalState = {
+  width: 420,
+  height: 260,
+  minWidth: 300,
+  minHeight: 190,
+  x: 0,
+  y: 0
+};
+
+function applyModalPosition() {
+  videoModal.style.width = `${modalState.width}px`;
+  videoModal.style.height = `${modalState.height}px`;
+  videoModal.style.left = `${modalState.x}px`;
+  videoModal.style.top = `${modalState.y}px`;
+}
+
+function positionModalBottomRight() {
+  modalState.x = Math.max(10, window.innerWidth - modalState.width - 20);
+  modalState.y = Math.max(10, window.innerHeight - modalState.height - 20);
+  applyModalPosition();
+}
+
+function normalizeYouTubeEmbed(rawValue) {
+  if (!rawValue) return '';
+
+  const decodeHtml = value => value
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+
+  const extractCandidateUrl = value => {
+    const decoded = decodeHtml(String(value).trim());
+
+    if (decoded.includes('<iframe')) {
+      const srcMatch = decoded.match(/src=["']([^"']+)["']/i);
+      if (srcMatch?.[1]) return srcMatch[1];
+    }
+
+    const firstHttpUrl = decoded.match(/https?:\/\/[^\s"'<>]+/i);
+    if (firstHttpUrl?.[0]) return firstHttpUrl[0];
+
+    const shortUrlNoProtocol = decoded.match(/(?:^|\s)(youtu\.be\/[^\s"'<>]+)/i);
+    if (shortUrlNoProtocol?.[1]) return `https://${shortUrlNoProtocol[1]}`;
+
+    return decoded;
+  };
+
+  const candidate = extractCandidateUrl(rawValue);
+  if (!candidate) return '';
+
+  try {
+    const parsed = new URL(candidate);
+    const host = parsed.hostname.replace('www.', '');
+    const pathParts = parsed.pathname.split('/').filter(Boolean);
+
+    let videoId = '';
+
+    if (host === 'youtu.be') {
+      videoId = pathParts[0] || '';
+    } else if (host === 'youtube.com' || host === 'm.youtube.com') {
+      if (parsed.pathname === '/watch') {
+        videoId = parsed.searchParams.get('v') || '';
+      } else if (pathParts[0] === 'embed' || pathParts[0] === 'shorts') {
+        videoId = pathParts[1] || '';
+      }
+    } else if (host === 'youtube-nocookie.com') {
+      if (pathParts[0] === 'embed') {
+        videoId = pathParts[1] || '';
+      }
+    }
+
+    if (!videoId) return '';
+
+    const safeVideoId = videoId.replace(/[^a-zA-Z0-9_-]/g, '');
+    return safeVideoId
+      ? `https://www.youtube.com/embed/${safeVideoId}?autoplay=1&rel=0`
+      : '';
+  } catch {
+    return '';
+  }
+}
+
+
+function openVideoEmbed(url) {
+  const embedUrl = normalizeYouTubeEmbed(url);
+  if (!embedUrl) return;
+
+  videoFrame.src = embedUrl;
+  videoModal.classList.add('open');
+  videoModal.setAttribute('aria-hidden', 'false');
+}
+
+function closeVideoEmbed() {
+  videoModal.classList.remove('open');
+  videoModal.setAttribute('aria-hidden', 'true');
+  videoFrame.src = '';
+}
+
+videoClose.addEventListener('click', closeVideoEmbed);
+
+window.addEventListener('resize', () => {
+  const maxX = Math.max(10, window.innerWidth - modalState.width - 10);
+  const maxY = Math.max(10, window.innerHeight - modalState.height - 10);
+  modalState.x = Math.min(modalState.x, maxX);
+  modalState.y = Math.min(modalState.y, maxY);
+  applyModalPosition();
+});
+
+videoResize.addEventListener('pointerdown', event => {
+  event.preventDefault();
+
+  const startX = event.clientX;
+  const startY = event.clientY;
+  const startWidth = modalState.width;
+  const startHeight = modalState.height;
+  const startLeft = modalState.x;
+  const startTop = modalState.y;
+  const fixedRight = startLeft + startWidth;
+  const fixedBottom = startTop + startHeight;
+
+  function onPointerMove(moveEvent) {
+    const deltaX = moveEvent.clientX - startX;
+    const deltaY = moveEvent.clientY - startY;
+
+    const nextWidth = Math.max(modalState.minWidth, startWidth - deltaX);
+    const nextHeight = Math.max(modalState.minHeight, startHeight - deltaY);
+
+    modalState.width = nextWidth;
+    modalState.height = nextHeight;
+    modalState.x = fixedRight - nextWidth;
+    modalState.y = fixedBottom - nextHeight;
+
+    applyModalPosition();
+  }
+
+  function onPointerUp() {
+    window.removeEventListener('pointermove', onPointerMove);
+    window.removeEventListener('pointerup', onPointerUp);
+  }
+
+  window.addEventListener('pointermove', onPointerMove);
+  window.addEventListener('pointerup', onPointerUp);
+});
+
+positionModalBottomRight();
 
 fetch(URL)
   .then(response => {
@@ -207,10 +461,17 @@ fetch(URL)
       const status = colunas[2] || '-';
       const suporte = (colunas[3] || '-').trim();
       const descricao = colunas[4] || '-';
+      const youtubeLink = (colunas[6] || '').trim();
       const usaFormatoExpandido = colunas.length >= 8;
       const linkProducao = (usaFormatoExpandido ? colunas[7] : colunas[5] || '').trim();
       const botaoLink = linkProducao
         ? `<a class="project-link" href="${linkProducao}" target="_blank" rel="noopener noreferrer">Acessar projeto</a>`
+        : '';
+      const botaoVideo = youtubeLink
+        ? `<button class="video-link" type="button" data-youtube="${youtubeLink.replace(/"/g, '&quot;')}" aria-label="Abrir vídeo no player"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.58 7.19a2.91 2.91 0 0 0-2.05-2.06C17.68 4.63 12 4.63 12 4.63s-5.68 0-7.53.5A2.91 2.91 0 0 0 2.42 7.2 30.4 30.4 0 0 0 2 12a30.4 30.4 0 0 0 .42 4.8 2.91 2.91 0 0 0 2.05 2.06c1.85.5 7.53.5 7.53.5s5.68 0 7.53-.5a2.91 2.91 0 0 0 2.05-2.06A30.4 30.4 0 0 0 22 12a30.4 30.4 0 0 0-.42-4.81ZM10.2 15.14V8.86L15.6 12Z"/></svg></button>`
+        : '';
+      const acoes = botaoLink || botaoVideo
+        ? `<div class="actions">${botaoLink}${botaoVideo}</div>`
         : '';
 
       const card = document.createElement('div');
@@ -232,8 +493,16 @@ fetch(URL)
         <div class="row"><strong>Status:</strong> ${status}</div>
         <div class="row"><strong>Suporte:</strong> ${suporte}</div>
         <div class="row"><strong>Descrição:</strong> ${descricao}</div>
-        ${botaoLink}
+        ${acoes}
       `;
+
+      const videoButton = card.querySelector('.video-link');
+      if (videoButton) {
+        videoButton.addEventListener('click', () => {
+          openVideoEmbed(videoButton.dataset.youtube || '');
+        });
+      }
+
       container.appendChild(card);
     });
   })
