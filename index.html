@@ -375,6 +375,98 @@ function drawMeshGradient(now = 0) {
     meshCtx.fillStyle = radial;
     meshCtx.fillRect(0, 0, width, height);
   }
+];
+
+function resizeMeshCanvas() {
+  meshCanvas.width = window.innerWidth;
+  meshCanvas.height = window.innerHeight;
+}
+
+function drawMeshGradient(now = 0) {
+  pointer.x += (pointer.targetX - pointer.x) * 0.045;
+  pointer.y += (pointer.targetY - pointer.y) * 0.045;
+
+  const width = meshCanvas.width;
+  const height = meshCanvas.height;
+
+  meshCtx.clearRect(0, 0, width, height);
+
+  const baseGradient = meshCtx.createLinearGradient(0, 0, width, height);
+  baseGradient.addColorStop(0, '#070b12');
+  baseGradient.addColorStop(0.55, '#0d1117');
+  baseGradient.addColorStop(1, '#05070d');
+  meshCtx.fillStyle = baseGradient;
+  meshCtx.fillRect(0, 0, width, height);
+
+  const nx = (pointer.x / Math.max(1, width) - 0.5) * 2;
+  const ny = (pointer.y / Math.max(1, height) - 0.5) * 2;
+
+  for (const blob of gradientBlobs) {
+    const oscillation = 1 + Math.sin(now * blob.speed) * blob.pulse;
+    const centerX = width * blob.xFactor + nx * width * blob.parallax;
+    const centerY = height * blob.yFactor + ny * height * blob.parallax;
+    const radius = Math.max(width, height) * blob.radiusFactor * oscillation;
+
+    const radial = meshCtx.createRadialGradient(
+      centerX,
+      centerY,
+      radius * 0.06,
+      centerX,
+      centerY,
+      radius
+    );
+
+    radial.addColorStop(0, `rgba(${blob.color}, 0.22)`);
+    radial.addColorStop(0.35, `rgba(${blob.color}, 0.12)`);
+    radial.addColorStop(1, `rgba(${blob.color}, 0)`);
+
+    meshCtx.globalCompositeOperation = 'lighter';
+    meshCtx.fillStyle = radial;
+    meshCtx.fillRect(0, 0, width, height);
+  }
+
+  meshCtx.globalCompositeOperation = 'source-over';
+  const vignette = meshCtx.createRadialGradient(
+    width * 0.5,
+    height * 0.5,
+    Math.min(width, height) * 0.2,
+    width * 0.5,
+    height * 0.5,
+    Math.max(width, height) * 0.75
+  );
+  vignette.addColorStop(0, 'rgba(13, 17, 23, 0)');
+  vignette.addColorStop(1, 'rgba(2, 4, 8, 0.62)');
+  meshCtx.fillStyle = vignette;
+  meshCtx.fillRect(0, 0, width, height);
+
+  requestAnimationFrame(drawMeshGradient);
+}
+
+window.addEventListener('pointermove', event => {
+  pointer.targetX = event.clientX;
+  pointer.targetY = event.clientY;
+});
+
+window.addEventListener('resize', resizeMeshCanvas);
+
+resizeMeshCanvas();
+drawMeshGradient();
+
+// Função para gerenciar o redirecionamento
+function redirectByHash() {
+  const hash = window.location.hash;
+
+  // Mapeamento de destinos
+  const routes = {
+    '#github': 'https://www.google.com',
+    '#vinhadinho': 'https://www.facebook.com'
+  };
+
+  // Verifica se o hash atual existe no nosso mapeamento
+  if (routes[hash]) {
+    window.location.href = routes[hash];
+  }
+}
 
   meshCtx.globalCompositeOperation = 'source-over';
 
