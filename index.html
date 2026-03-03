@@ -31,7 +31,7 @@
       height: 100%;
       z-index: 0;
       pointer-events: none;
-      opacity: 0.8;
+      opacity: 0.58;
     }
 
     header {
@@ -274,11 +274,11 @@ const gradientBlobs = [
     xFactor: 0.2,
     yFactor: 0.24,
     radiusFactor: 0.5,
-    parallax: 0.08,
-    pulse: 0.16,
-    speed: 0.0003,
-    swirl: 34,
-    swirlSpeed: 0.00024,
+    parallax: 0.045,
+    pulse: 0.08,
+    speed: 0.00014,
+    swirl: 18,
+    swirlSpeed: 0.0001,
     phase: 0.7
   },
   {
@@ -286,11 +286,11 @@ const gradientBlobs = [
     xFactor: 0.74,
     yFactor: 0.32,
     radiusFactor: 0.45,
-    parallax: 0.075,
-    pulse: 0.14,
-    speed: 0.00026,
-    swirl: 28,
-    swirlSpeed: 0.0002,
+    parallax: 0.04,
+    pulse: 0.075,
+    speed: 0.00012,
+    swirl: 15,
+    swirlSpeed: 0.00009,
     phase: 1.8
   },
   {
@@ -298,11 +298,11 @@ const gradientBlobs = [
     xFactor: 0.52,
     yFactor: 0.8,
     radiusFactor: 0.43,
-    parallax: 0.065,
-    pulse: 0.12,
-    speed: 0.00022,
-    swirl: 24,
-    swirlSpeed: 0.00018,
+    parallax: 0.035,
+    pulse: 0.07,
+    speed: 0.0001,
+    swirl: 13,
+    swirlSpeed: 0.00008,
     phase: 2.9
   }
 ];
@@ -313,8 +313,8 @@ function resizeMeshCanvas() {
 }
 
 function updatePointerMotion() {
-  const spring = 0.032;
-  const damping = 0.82;
+  const spring = 0.014;
+  const damping = 0.9;
 
   pointer.vx += (pointer.targetX - pointer.x) * spring;
   pointer.vy += (pointer.targetY - pointer.y) * spring;
@@ -344,9 +344,9 @@ function drawMeshGradient(now = 0) {
 
   const nx = (pointer.x / Math.max(1, width) - 0.5) * 2;
   const ny = (pointer.y / Math.max(1, height) - 0.5) * 2;
-  const velocity = Math.min(1, Math.hypot(pointer.vx, pointer.vy) / 16);
-  const ambientFlowX = Math.cos(now * 0.00011) * 26;
-  const ambientFlowY = Math.sin(now * 0.00009) * 22;
+  const velocity = Math.min(1, Math.hypot(pointer.vx, pointer.vy) / 24);
+  const ambientFlowX = Math.cos(now * 0.00006) * 14;
+  const ambientFlowY = Math.sin(now * 0.00005) * 12;
 
   meshCtx.globalCompositeOperation = 'lighter';
 
@@ -354,12 +354,12 @@ function drawMeshGradient(now = 0) {
     const pulseWave = 1 + Math.sin(now * blob.speed + blob.phase) * blob.pulse;
     const swirlX = Math.cos(now * blob.swirlSpeed + blob.phase) * blob.swirl;
     const swirlY = Math.sin(now * blob.swirlSpeed + blob.phase * 1.4) * blob.swirl;
-    const velocityPushX = pointer.vx * (24 + blob.swirl * 0.26);
-    const velocityPushY = pointer.vy * (24 + blob.swirl * 0.26);
+    const velocityPushX = pointer.vx * (12 + blob.swirl * 0.2);
+    const velocityPushY = pointer.vy * (12 + blob.swirl * 0.2);
 
     const centerX = width * blob.xFactor + nx * width * blob.parallax + swirlX + velocityPushX + ambientFlowX;
     const centerY = height * blob.yFactor + ny * height * blob.parallax + swirlY + velocityPushY + ambientFlowY;
-    const radius = largestSide * blob.radiusFactor * pulseWave * (1 + velocity * 0.12);
+    const radius = largestSide * blob.radiusFactor * pulseWave * (1 + velocity * 0.06);
 
     const radial = meshCtx.createRadialGradient(
       centerX,
@@ -370,8 +370,8 @@ function drawMeshGradient(now = 0) {
       radius
     );
 
-    radial.addColorStop(0, `rgba(${blob.color}, ${0.21 + velocity * 0.08})`);
-    radial.addColorStop(0.4, `rgba(${blob.color}, ${0.11 + velocity * 0.04})`);
+    radial.addColorStop(0, `rgba(${blob.color}, ${0.14 + velocity * 0.04})`);
+    radial.addColorStop(0.4, `rgba(${blob.color}, ${0.07 + velocity * 0.02})`);
     radial.addColorStop(1, `rgba(${blob.color}, 0)`);
 
     meshCtx.fillStyle = radial;
