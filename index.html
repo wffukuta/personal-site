@@ -274,7 +274,7 @@ const gradientBlobs = [
     xFactor: 0.2,
     yFactor: 0.24,
     radiusFactor: 0.5,
-    parallax: 0.04,
+    parallax: 0.08,
     pulse: 0.16,
     speed: 0.0003,
     swirl: 34,
@@ -286,7 +286,7 @@ const gradientBlobs = [
     xFactor: 0.74,
     yFactor: 0.32,
     radiusFactor: 0.45,
-    parallax: 0.036,
+    parallax: 0.075,
     pulse: 0.14,
     speed: 0.00026,
     swirl: 28,
@@ -298,7 +298,7 @@ const gradientBlobs = [
     xFactor: 0.52,
     yFactor: 0.8,
     radiusFactor: 0.43,
-    parallax: 0.03,
+    parallax: 0.065,
     pulse: 0.12,
     speed: 0.00022,
     swirl: 24,
@@ -313,8 +313,8 @@ function resizeMeshCanvas() {
 }
 
 function updatePointerMotion() {
-  const spring = 0.02;
-  const damping = 0.86;
+  const spring = 0.032;
+  const damping = 0.82;
 
   pointer.vx += (pointer.targetX - pointer.x) * spring;
   pointer.vy += (pointer.targetY - pointer.y) * spring;
@@ -344,7 +344,9 @@ function drawMeshGradient(now = 0) {
 
   const nx = (pointer.x / Math.max(1, width) - 0.5) * 2;
   const ny = (pointer.y / Math.max(1, height) - 0.5) * 2;
-  const velocity = Math.min(1, Math.hypot(pointer.vx, pointer.vy) / 20);
+  const velocity = Math.min(1, Math.hypot(pointer.vx, pointer.vy) / 16);
+  const ambientFlowX = Math.cos(now * 0.00011) * 26;
+  const ambientFlowY = Math.sin(now * 0.00009) * 22;
 
   meshCtx.globalCompositeOperation = 'lighter';
 
@@ -352,12 +354,12 @@ function drawMeshGradient(now = 0) {
     const pulseWave = 1 + Math.sin(now * blob.speed + blob.phase) * blob.pulse;
     const swirlX = Math.cos(now * blob.swirlSpeed + blob.phase) * blob.swirl;
     const swirlY = Math.sin(now * blob.swirlSpeed + blob.phase * 1.4) * blob.swirl;
-    const velocityPushX = pointer.vx * (18 + blob.swirl * 0.2);
-    const velocityPushY = pointer.vy * (18 + blob.swirl * 0.2);
+    const velocityPushX = pointer.vx * (24 + blob.swirl * 0.26);
+    const velocityPushY = pointer.vy * (24 + blob.swirl * 0.26);
 
-    const centerX = width * blob.xFactor + nx * width * blob.parallax + swirlX + velocityPushX;
-    const centerY = height * blob.yFactor + ny * height * blob.parallax + swirlY + velocityPushY;
-    const radius = largestSide * blob.radiusFactor * pulseWave * (1 + velocity * 0.08);
+    const centerX = width * blob.xFactor + nx * width * blob.parallax + swirlX + velocityPushX + ambientFlowX;
+    const centerY = height * blob.yFactor + ny * height * blob.parallax + swirlY + velocityPushY + ambientFlowY;
+    const radius = largestSide * blob.radiusFactor * pulseWave * (1 + velocity * 0.12);
 
     const radial = meshCtx.createRadialGradient(
       centerX,
@@ -375,98 +377,6 @@ function drawMeshGradient(now = 0) {
     meshCtx.fillStyle = radial;
     meshCtx.fillRect(0, 0, width, height);
   }
-];
-
-function resizeMeshCanvas() {
-  meshCanvas.width = window.innerWidth;
-  meshCanvas.height = window.innerHeight;
-}
-
-function drawMeshGradient(now = 0) {
-  pointer.x += (pointer.targetX - pointer.x) * 0.045;
-  pointer.y += (pointer.targetY - pointer.y) * 0.045;
-
-  const width = meshCanvas.width;
-  const height = meshCanvas.height;
-
-  meshCtx.clearRect(0, 0, width, height);
-
-  const baseGradient = meshCtx.createLinearGradient(0, 0, width, height);
-  baseGradient.addColorStop(0, '#070b12');
-  baseGradient.addColorStop(0.55, '#0d1117');
-  baseGradient.addColorStop(1, '#05070d');
-  meshCtx.fillStyle = baseGradient;
-  meshCtx.fillRect(0, 0, width, height);
-
-  const nx = (pointer.x / Math.max(1, width) - 0.5) * 2;
-  const ny = (pointer.y / Math.max(1, height) - 0.5) * 2;
-
-  for (const blob of gradientBlobs) {
-    const oscillation = 1 + Math.sin(now * blob.speed) * blob.pulse;
-    const centerX = width * blob.xFactor + nx * width * blob.parallax;
-    const centerY = height * blob.yFactor + ny * height * blob.parallax;
-    const radius = Math.max(width, height) * blob.radiusFactor * oscillation;
-
-    const radial = meshCtx.createRadialGradient(
-      centerX,
-      centerY,
-      radius * 0.06,
-      centerX,
-      centerY,
-      radius
-    );
-
-    radial.addColorStop(0, `rgba(${blob.color}, 0.22)`);
-    radial.addColorStop(0.35, `rgba(${blob.color}, 0.12)`);
-    radial.addColorStop(1, `rgba(${blob.color}, 0)`);
-
-    meshCtx.globalCompositeOperation = 'lighter';
-    meshCtx.fillStyle = radial;
-    meshCtx.fillRect(0, 0, width, height);
-  }
-
-  meshCtx.globalCompositeOperation = 'source-over';
-  const vignette = meshCtx.createRadialGradient(
-    width * 0.5,
-    height * 0.5,
-    Math.min(width, height) * 0.2,
-    width * 0.5,
-    height * 0.5,
-    Math.max(width, height) * 0.75
-  );
-  vignette.addColorStop(0, 'rgba(13, 17, 23, 0)');
-  vignette.addColorStop(1, 'rgba(2, 4, 8, 0.62)');
-  meshCtx.fillStyle = vignette;
-  meshCtx.fillRect(0, 0, width, height);
-
-  requestAnimationFrame(drawMeshGradient);
-}
-
-window.addEventListener('pointermove', event => {
-  pointer.targetX = event.clientX;
-  pointer.targetY = event.clientY;
-});
-
-window.addEventListener('resize', resizeMeshCanvas);
-
-resizeMeshCanvas();
-drawMeshGradient();
-
-// Função para gerenciar o redirecionamento
-function redirectByHash() {
-  const hash = window.location.hash;
-
-  // Mapeamento de destinos
-  const routes = {
-    '#github': 'https://www.google.com',
-    '#vinhadinho': 'https://www.facebook.com'
-  };
-
-  // Verifica se o hash atual existe no nosso mapeamento
-  if (routes[hash]) {
-    window.location.href = routes[hash];
-  }
-}
 
   meshCtx.globalCompositeOperation = 'source-over';
 
@@ -493,10 +403,23 @@ function redirectByHash() {
   requestAnimationFrame(drawMeshGradient);
 }
 
+function setPointerTarget(clientX, clientY) {
+  pointer.targetX = clientX;
+  pointer.targetY = clientY;
+}
+
 window.addEventListener('pointermove', event => {
-  pointer.targetX = event.clientX;
-  pointer.targetY = event.clientY;
+  setPointerTarget(event.clientX, event.clientY);
 });
+
+window.addEventListener('mousemove', event => {
+  setPointerTarget(event.clientX, event.clientY);
+});
+
+window.addEventListener('touchmove', event => {
+  if (!event.touches || !event.touches[0]) return;
+  setPointerTarget(event.touches[0].clientX, event.touches[0].clientY);
+}, { passive: true });
 
 window.addEventListener('resize', resizeMeshCanvas);
 
