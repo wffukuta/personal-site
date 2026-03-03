@@ -607,7 +607,7 @@ window.addEventListener('hashchange', redirectByHash);
   
 <script>
 // Sua URL do Google Sheets (TSV)
-const URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTWPZAcT8ZfbRTSlM-89fg5gHQaK5XGiL1TpTbMHvv7OZV4fOIYjHH2-HjOpEBgdwrp0ayJMv2Bpw6i/pub?gid=519673108&single=true&output=tsv';
+const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTWPZAcT8ZfbRTSlM-89fg5gHQaK5XGiL1TpTbMHvv7OZV4fOIYjHH2-HjOpEBgdwrp0ayJMv2Bpw6i/pub?gid=519673108&single=true&output=tsv';
 
 const container = document.getElementById('lista');
 const statusText = document.getElementById('status-text');
@@ -744,7 +744,7 @@ videoResize.addEventListener('pointerdown', event => {
 positionModalBottomRight();
 closeVideoEmbed();
 
-fetch(URL)
+fetch(sheetURL)
   .then(response => {
     if (!response.ok) throw new Error('A planilha não respondeu corretamente (Erro: ' + response.status + ')');
     return response.text();
