@@ -308,13 +308,11 @@
       border-color: var(--link-color);
     }
 
-    .chat-auth,
     .chat-compose {
       padding: 10px;
       border-top: 1px solid var(--border-color);
     }
 
-    .chat-auth button,
     .chat-compose button {
       border: 1px solid var(--border-color);
       background: #21262d;
@@ -324,15 +322,8 @@
       cursor: pointer;
     }
 
-    .chat-auth button:hover,
     .chat-compose button:hover {
       border-color: var(--link-color);
-    }
-
-    .chat-status {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-bottom: 8px;
     }
 
     .chat-login-highlight {
@@ -436,10 +427,6 @@
     </div>
     <div class="chat-messages" id="chat-messages">
       <div class="chat-message">Faça login com Google para acessar a conversa de contato.</div>
-    </div>
-    <div class="chat-auth">
-      <div class="chat-status" id="chat-status">Desconectado</div>
-      <button id="chat-logout" type="button" hidden>Sair</button>
     </div>
     <form class="chat-compose" id="chat-form">
       <input id="chat-input" type="text" maxlength="500" placeholder="Escreva uma mensagem" autocomplete="off" disabled />
@@ -880,8 +867,7 @@ import {
   getAuth,
   GoogleAuthProvider,
   onAuthStateChanged,
-  signInWithPopup,
-  signOut
+  signInWithPopup
 } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import {
   getDatabase,
@@ -909,11 +895,9 @@ const provider = new GoogleAuthProvider();
 const chatWidget = document.getElementById('chat-widget');
 const chatToggle = document.getElementById('chat-toggle');
 const chatMessages = document.getElementById('chat-messages');
-const chatStatus = document.getElementById('chat-status');
 const chatClose = document.getElementById('chat-close');
 const chatLoginHighlight = document.getElementById('chat-login-highlight');
 const chatLogin = document.getElementById('chat-login');
-const chatLogout = document.getElementById('chat-logout');
 const chatForm = document.getElementById('chat-form');
 const chatInput = document.getElementById('chat-input');
 const chatSend = document.getElementById('chat-send');
@@ -972,21 +956,15 @@ chatLogin.addEventListener('click', async () => {
   try {
     await signInWithPopup(auth, provider);
   } catch (error) {
-    chatStatus.textContent = `Falha no login: ${error.message}`;
+    console.error('Falha no login:', error);
   }
-});
-
-chatLogout.addEventListener('click', async () => {
-  await signOut(auth);
 });
 
 onAuthStateChanged(auth, user => {
   if (user) {
-    chatStatus.textContent = `Conectado como ${user.displayName || user.email || 'usuário'}`;
     messagesRef = ref(database, `chats/${user.uid}`);
     escutarMensagens(messagesRef);
     chatLoginHighlight.hidden = true;
-    chatLogout.hidden = false;
     chatInput.disabled = false;
     chatSend.disabled = false;
   } else {
@@ -996,9 +974,7 @@ onAuthStateChanged(auth, user => {
     }
     messagesRef = null;
     chatMessages.innerHTML = '<div class="chat-message">Faça login com Google para acessar a conversa de contato.</div>';
-    chatStatus.textContent = 'Desconectado';
     chatLoginHighlight.hidden = false;
-    chatLogout.hidden = true;
     chatInput.disabled = true;
     chatSend.disabled = true;
   }
