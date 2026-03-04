@@ -478,7 +478,7 @@
 
 
 <button class="modo-toggle" id="modo-toggle" type="button" aria-label="Controlar troca de modo" title="Iniciar ou pausar troca automática de modo">
-  <span class="modo-toggle__icon" id="modo-toggle-icon" aria-hidden="true">⏸︎</span>
+  <span class="modo-toggle__icon" id="modo-toggle-icon" aria-hidden="true">Ⅱ</span>
 </button>
 
 <section class="chat-widget" id="chat-widget" aria-label="Chat de contato">
@@ -770,7 +770,7 @@ function pauseModoTimer() {
   clearModoTimer();
 
   const progress = modoTimerDuration ? (modoTimerDuration - modoRemainingTime) / modoTimerDuration : 0;
-  setModoToggleVisual(progress, '⏸︎');
+  setModoToggleVisual(progress, 'Ⅱ');
 }
 
 function resumeModoTimer() {
