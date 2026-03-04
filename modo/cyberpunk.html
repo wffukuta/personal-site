@@ -1,24 +1,31 @@
 <script>
   (function() {
-    // 1. Parar e esconder o Mesh Gradient (Canvas)
+    // 1. Ajustar o Canvas para uma vibe de "Matrix/Hacker"
     const canvas = document.getElementById('mesh-bg');
     if (canvas) {
-      canvas.style.display = 'none';
+      canvas.style.display = 'block';
+      canvas.style.opacity = '0.3'; // Mais sutil para não brigar com o neon
+      canvas.style.filter = 'hue-rotate(280deg) brightness(0.8)'; // Tona para roxo/rosa
     }
 
-    // 2. Definir as novas variáveis de cor (Estilo E-Ink)
+    // 2. Variáveis de Ambiente Neon
     const root = document.documentElement;
-    root.style.setProperty('--bg-body', '#f2f2f2'); // Cinza bem claro "papel"
-    root.style.setProperty('--bg-card', '#ffffff'); // Branco puro para os cards
-    root.style.setProperty('--border-color', '#000000'); // Bordas pretas sólidas
-    root.style.setProperty('--text-main', '#1a1a1a'); // Texto quase preto
-    root.style.setProperty('--text-muted', '#444444');
-    root.style.setProperty('--link-color', '#000000'); // Links pretos (estilo jornal)
+    root.style.setProperty('--bg-body', '#050505'); // Preto puro
+    root.style.setProperty('--bg-card', '#0a0a0c');
+    root.style.setProperty('--text-main', '#00ff41'); // Verde Matrix/Terminal
+    root.style.setProperty('--text-muted', '#008f11');
+    root.style.setProperty('--link-color', '#fdee06'); // Amarelo Cyberpunk 2077
 
-    // 3. Injetar estilos globais para mudar fontes e remover efeitos modernos
-    const styleId = 'kindle-theme-overrides';
-    let styleTag = document.getElementById(styleId);
+    // 3. Injetar o CSS "High Tech, Low Life"
+    const styleId = 'cyberpunk-theme-overrides';
     
+    // Limpeza de temas anteriores
+    ['kindle-theme-overrides', 'universe-theme-overrides'].forEach(id => {
+      const old = document.getElementById(id);
+      if (old) old.remove();
+    });
+
+    let styleTag = document.getElementById(styleId);
     if (!styleTag) {
       styleTag = document.createElement('style');
       styleTag.id = styleId;
@@ -26,87 +33,117 @@
     }
 
     styleTag.innerHTML = `
-      @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;900&display=swap');
 
       body {
-        font-family: 'Crimson Pro', 'Georgia', serif !important;
-        background-image: radial-gradient(#d1d1d1 1px, transparent 1px); /* Textura leve de papel */
-        background-size: 20px 20px;
+        font-family: 'JetBrains Mono', monospace !important;
+        background-color: #050505;
+        /* Efeito de Scanlines (linhas de TV antiga) */
+        background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                          linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+        background-size: 100% 4px, 3px 100%;
       }
 
       header {
-        background-color: #ffffff !important;
-        border-bottom: 4px solid #000000 !important;
-        backdrop-filter: none !important;
-        box-shadow: none !important;
+        background: #fdee06 !important;
+        border-bottom: 5px solid #000 !important;
+        clip-path: polygon(0 0, 100% 0, 100% 80%, 98% 100%, 0 100%);
+        padding: 50px 16px !important;
       }
 
-      h1, h2, h3 {
-        font-weight: 700;
+      header h1 {
+        font-family: 'Orbitron', sans-serif !important;
+        color: #000 !important;
+        font-weight: 900 !important;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        font-size: 3rem;
+        letter-spacing: -2px;
+        font-style: italic;
       }
 
+      /* Cards Estilo Interface de Combate (HUD) */
       .about, .card {
-        border: 2px solid #000000 !important;
-        border-radius: 0px !important; /* Estilo mais seco/quadrado */
-        box-shadow: 4px 4px 0px #000000 !important; /* Sombra sólida "cartoon/sketch" */
-        transition: transform 0.1s;
+        background: #0a0a0c !important;
+        border-radius: 0px !important;
+        position: relative;
+        overflow: hidden;
+        /* Corte no canto inferior direito */
+        clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
+        transition: transform 0.2s, filter 0.2s;
       }
 
       .card:hover {
-        transform: translate(-2px, -2px);
-        box-shadow: 6px 6px 0px #000000 !important;
+        transform: skewX(-1deg);
+        filter: brightness(1.2);
       }
 
-      .card--suporte-sim { border: 6px solid #000000 !important; }
-      .card--suporte-nao { border: 2px dashed #000000 !important; }
-      .card--suporte-em-breve { border: 2px solid #666666 !important; }
+      /* Bordas Neon Requisitadas (Azul, Amarelo, Vermelho) */
+      .card--suporte-sim {
+        border: 2px solid #00f3ff !important; /* Ciano Neon */
+        box-shadow: inset 0 0 15px rgba(0, 243, 255, 0.2), 0 0 20px rgba(0, 243, 255, 0.4) !important;
+      }
 
-      .project-link, .video-link {
-        background: #000000 !important;
-        color: #ffffff !important;
+      .card--suporte-nao {
+        border: 2px solid #ff003c !important; /* Vermelho "Arasaka" */
+        box-shadow: inset 0 0 15px rgba(255, 0, 60, 0.2), 0 0 20px rgba(255, 0, 60, 0.4) !important;
+      }
+
+      .card--suporte-em-breve {
+        border: 2px solid #fdee06 !important; /* Amarelo Neon */
+        box-shadow: inset 0 0 15px rgba(253, 238, 6, 0.2), 0 0 20px rgba(253, 238, 6, 0.4) !important;
+      }
+
+      .card h2 {
+        font-family: 'Orbitron', sans-serif;
+        color: #fff !important;
+        text-shadow: 2px 2px #ff003c;
+      }
+
+      .row strong {
+        color: #fdee06 !important;
+      }
+
+      /* Botões de Glitch */
+      .project-link {
+        background: #00f3ff !important;
+        color: #000 !important;
         border-radius: 0px !important;
-        border: 1px solid #000000 !important;
+        font-weight: 900;
         text-transform: uppercase;
-        font-weight: bold;
+        border: none;
+        position: relative;
       }
 
-      .project-link:hover, .video-link:hover {
-        background: #444444 !important;
+      .project-link:hover {
+        box-shadow: -5px 0px 0px #ff003c, 5px 0px 0px #fdee06 !important;
       }
 
-      /* Chat Widget estilo Kindle */
+      /* Chat Widget Estilo Terminal de Dados */
       .chat-widget {
-        border-radius: 0px !important;
-        border: 2px solid #000000 !important;
-        background: #ffffff !important;
-        box-shadow: 4px 4px 0px #000000 !important;
+        border: 2px solid #fdee06 !important;
+        background: #000 !important;
       }
 
       .chat-toggle {
+        background: #fdee06 !important;
+        color: #000 !important;
         border-radius: 0px !important;
-        background: #000000 !important;
+        clip-path: polygon(20% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 20%);
       }
 
       .chat-header {
-        background: #000000 !important;
-        color: #ffffff !important;
+        background: #fdee06 !important;
+        color: #000 !important;
+        font-family: 'Orbitron', sans-serif;
       }
 
       .chat-message {
-        border-radius: 0px !important;
-        border: 1px solid #000000 !important;
-        background: #f9f9f9 !important;
-      }
-
-      /* Esconder brilhos e efeitos neon */
-      .video-modal {
-        box-shadow: 10px 10px 0px #000000 !important;
-        border: 3px solid #000000 !important;
+        border: 1px solid #00ff41 !important;
+        background: rgba(0, 255, 65, 0.05) !important;
+        color: #00ff41 !important;
       }
     `;
 
-    console.log("Modo Kindle Ativado: Leitura clara e design minimalista.");
+    console.log("CONEXÃO ESTABELECIDA: MODO CYBERPUNK ATIVO.");
   })();
 </script>
