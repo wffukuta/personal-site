@@ -1,1 +1,112 @@
+<script>
+  (function() {
+    // 1. Parar e esconder o Mesh Gradient (Canvas)
+    const canvas = document.getElementById('mesh-bg');
+    if (canvas) {
+      canvas.style.display = 'none';
+    }
 
+    // 2. Definir as novas variáveis de cor (Estilo E-Ink)
+    const root = document.documentElement;
+    root.style.setProperty('--bg-body', '#f2f2f2'); // Cinza bem claro "papel"
+    root.style.setProperty('--bg-card', '#ffffff'); // Branco puro para os cards
+    root.style.setProperty('--border-color', '#000000'); // Bordas pretas sólidas
+    root.style.setProperty('--text-main', '#1a1a1a'); // Texto quase preto
+    root.style.setProperty('--text-muted', '#444444');
+    root.style.setProperty('--link-color', '#000000'); // Links pretos (estilo jornal)
+
+    // 3. Injetar estilos globais para mudar fontes e remover efeitos modernos
+    const styleId = 'kindle-theme-overrides';
+    let styleTag = document.getElementById(styleId);
+    
+    if (!styleTag) {
+      styleTag = document.createElement('style');
+      styleTag.id = styleId;
+      document.head.appendChild(styleTag);
+    }
+
+    styleTag.innerHTML = `
+      @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&display=swap');
+
+      body {
+        font-family: 'Crimson Pro', 'Georgia', serif !important;
+        background-image: radial-gradient(#d1d1d1 1px, transparent 1px); /* Textura leve de papel */
+        background-size: 20px 20px;
+      }
+
+      header {
+        background-color: #ffffff !important;
+        border-bottom: 4px solid #000000 !important;
+        backdrop-filter: none !important;
+        box-shadow: none !important;
+      }
+
+      h1, h2, h3 {
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .about, .card {
+        border: 2px solid #000000 !important;
+        border-radius: 0px !important; /* Estilo mais seco/quadrado */
+        box-shadow: 4px 4px 0px #000000 !important; /* Sombra sólida "cartoon/sketch" */
+        transition: transform 0.1s;
+      }
+
+      .card:hover {
+        transform: translate(-2px, -2px);
+        box-shadow: 6px 6px 0px #000000 !important;
+      }
+
+      .card--suporte-sim { border: 6px solid #000000 !important; }
+      .card--suporte-nao { border: 2px dashed #000000 !important; }
+      .card--suporte-em-breve { border: 2px solid #666666 !important; }
+
+      .project-link, .video-link {
+        background: #000000 !important;
+        color: #ffffff !important;
+        border-radius: 0px !important;
+        border: 1px solid #000000 !important;
+        text-transform: uppercase;
+        font-weight: bold;
+      }
+
+      .project-link:hover, .video-link:hover {
+        background: #444444 !important;
+      }
+
+      /* Chat Widget estilo Kindle */
+      .chat-widget {
+        border-radius: 0px !important;
+        border: 2px solid #000000 !important;
+        background: #ffffff !important;
+        box-shadow: 4px 4px 0px #000000 !important;
+      }
+
+      .chat-toggle {
+        border-radius: 0px !important;
+        background: #000000 !important;
+      }
+
+      .chat-header {
+        background: #000000 !important;
+        color: #ffffff !important;
+      }
+
+      .chat-message {
+        border-radius: 0px !important;
+        border: 1px solid #000000 !important;
+        background: #f9f9f9 !important;
+      }
+
+      /* Esconder brilhos e efeitos neon */
+      .video-modal {
+        box-shadow: 10px 10px 0px #000000 !important;
+        border: 3px solid #000000 !important;
+      }
+    `;
+
+    console.log("Modo Kindle Ativado: Leitura clara e design minimalista.");
+  })();
+</script>
