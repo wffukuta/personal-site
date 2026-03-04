@@ -1,5 +1,13 @@
 <script>
   (function() {
+    // Limpeza defensiva: remove vestígios de outros temas antes de aplicar o atual
+    ['kindle-theme-overrides', 'universe-theme-overrides', 'cyberpunk-theme-overrides'].forEach(id => {
+      const styleTag = document.getElementById(id);
+      if (styleTag) styleTag.remove();
+    });
+
+    const root = document.documentElement;
+    root.removeAttribute('style');
     // 1. Reativar e ajustar o Canvas (Nebulosa)
     const canvas = document.getElementById('mesh-bg');
     if (canvas) {
@@ -8,7 +16,6 @@
     }
 
     // 2. Variáveis de Ambiente Espacial
-    const root = document.documentElement;
     root.style.setProperty('--bg-body', '#020617'); // Preto azulado profundo
     root.style.setProperty('--bg-card', 'rgba(15, 23, 42, 0.7)'); // Vidro escuro
     root.style.setProperty('--border-color', 'rgba(255, 255, 255, 0.1)');
@@ -18,10 +25,6 @@
 
     // 3. Injetar o CSS de imersão estelar
     const styleId = 'universe-theme-overrides';
-    // Remove o estilo do tema anterior se existir
-    const oldStyle = document.getElementById('kindle-theme-overrides');
-    if (oldStyle) oldStyle.remove();
-
     let styleTag = document.getElementById(styleId);
     if (!styleTag) {
       styleTag = document.createElement('style');

@@ -1,5 +1,13 @@
 <script>
   (function() {
+    // Limpeza defensiva: remove vestígios de outros temas antes de aplicar o atual
+    ['kindle-theme-overrides', 'universe-theme-overrides', 'cyberpunk-theme-overrides'].forEach(id => {
+      const styleTag = document.getElementById(id);
+      if (styleTag) styleTag.remove();
+    });
+
+    const root = document.documentElement;
+    root.removeAttribute('style');
     // 1. Ajustar o Canvas para uma vibe de "Matrix/Hacker"
     const canvas = document.getElementById('mesh-bg');
     if (canvas) {
@@ -9,7 +17,6 @@
     }
 
     // 2. Variáveis de Ambiente Neon
-    const root = document.documentElement;
     root.style.setProperty('--bg-body', '#050505'); // Preto puro
     root.style.setProperty('--bg-card', '#0a0a0c');
     root.style.setProperty('--text-main', '#00ff41'); // Verde Matrix/Terminal
@@ -19,12 +26,6 @@
     // 3. Injetar o CSS "High Tech, Low Life"
     const styleId = 'cyberpunk-theme-overrides';
     
-    // Limpeza de temas anteriores
-    ['kindle-theme-overrides', 'universe-theme-overrides'].forEach(id => {
-      const old = document.getElementById(id);
-      if (old) old.remove();
-    });
-
     let styleTag = document.getElementById(styleId);
     if (!styleTag) {
       styleTag = document.createElement('style');

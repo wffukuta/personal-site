@@ -1,5 +1,13 @@
 <script>
   (function() {
+    // Limpeza defensiva: remove vestígios de outros temas antes de aplicar o atual
+    ['kindle-theme-overrides', 'universe-theme-overrides', 'cyberpunk-theme-overrides'].forEach(id => {
+      const styleTag = document.getElementById(id);
+      if (styleTag) styleTag.remove();
+    });
+
+    const root = document.documentElement;
+    root.removeAttribute('style');
     // 1. Parar e esconder o Mesh Gradient (Canvas)
     const canvas = document.getElementById('mesh-bg');
     if (canvas) {
@@ -7,7 +15,6 @@
     }
 
     // 2. Definir as novas variáveis de cor (Estilo E-Ink)
-    const root = document.documentElement;
     root.style.setProperty('--bg-body', '#f2f2f2'); // Cinza bem claro "papel"
     root.style.setProperty('--bg-card', '#ffffff'); // Branco puro para os cards
     root.style.setProperty('--border-color', '#000000'); // Bordas pretas sólidas

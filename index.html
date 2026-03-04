@@ -630,8 +630,20 @@ function getRandomModoInterval() {
 }
 
 function clearModoScripts() {
+  // 1. Remove os elementos <script> que foram injetados anteriormente
   activeModoScripts.forEach(script => script.remove());
   activeModoScripts.length = 0;
+
+  // 2. Remove as tags de <style> específicas dos temas
+  const temasIds = ['kindle-theme-overrides', 'universe-theme-overrides', 'cyberpunk-theme-overrides'];
+  temasIds.forEach(id => {
+    const styleTag = document.getElementById(id);
+    if (styleTag) styleTag.remove();
+  });
+
+  // 3. Reset das variáveis de cor do root para o padrão (opcional, mas recomendado)
+  const root = document.documentElement;
+  root.removeAttribute('style');
 }
 
 function scheduleNextModoLoad() {
