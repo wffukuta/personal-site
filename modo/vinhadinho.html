@@ -8,24 +8,27 @@
 
     const root = document.documentElement;
     root.removeAttribute('style');
-    // 1. Parar e esconder o Mesh Gradient (Canvas)
+
+    // 1. Reativar e exibir o Mesh Gradient (tema escuro original)
     const canvas = document.getElementById('mesh-bg');
     if (canvas) {
-      canvas.style.display = 'none';
+      canvas.style.display = 'block';
+      canvas.style.opacity = '0.58';
+      canvas.style.filter = 'none';
     }
 
-    // 2. Definir as novas variáveis de cor (Estilo E-Ink)
-    root.style.setProperty('--bg-body', '#f2f2f2'); // Cinza bem claro "papel"
-    root.style.setProperty('--bg-card', '#ffffff'); // Branco puro para os cards
-    root.style.setProperty('--border-color', '#000000'); // Bordas pretas sólidas
-    root.style.setProperty('--text-main', '#1a1a1a'); // Texto quase preto
-    root.style.setProperty('--text-muted', '#444444');
-    root.style.setProperty('--link-color', '#000000'); // Links pretos (estilo jornal)
+    // 2. Restaurar variáveis de cor do visual original
+    root.style.setProperty('--bg-body', '#0d1117');
+    root.style.setProperty('--bg-card', '#161b22');
+    root.style.setProperty('--border-color', '#30363d');
+    root.style.setProperty('--text-main', '#c9d1d9');
+    root.style.setProperty('--text-muted', '#8b949e');
+    root.style.setProperty('--link-color', '#58a6ff');
 
-    // 3. Injetar estilos globais para mudar fontes e remover efeitos modernos
+    // 3. Injetar estilos para reconstituir o tema base antigo do index
     const styleId = 'kindle-theme-overrides';
     let styleTag = document.getElementById(styleId);
-    
+
     if (!styleTag) {
       styleTag = document.createElement('style');
       styleTag.id = styleId;
@@ -33,87 +36,103 @@
     }
 
     styleTag.innerHTML = `
-      @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&display=swap');
-
       body {
-        font-family: 'Crimson Pro', 'Georgia', serif !important;
-        background-image: radial-gradient(#d1d1d1 1px, transparent 1px); /* Textura leve de papel */
-        background-size: 20px 20px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
+        background-color: var(--bg-body) !important;
+        background-image: none !important;
       }
 
       header {
-        background-color: #ffffff !important;
-        border-bottom: 4px solid #000000 !important;
-        backdrop-filter: none !important;
-        box-shadow: none !important;
+        border-bottom: 1px solid var(--border-color) !important;
+        background-color: rgba(22, 27, 34, 0.7) !important;
+        backdrop-filter: blur(2px) !important;
       }
 
       h1, h2, h3 {
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 1px;
+        text-transform: none !important;
+        letter-spacing: normal !important;
+        font-weight: inherit !important;
       }
 
       .about, .card {
-        border: 2px solid #000000 !important;
-        border-radius: 0px !important; /* Estilo mais seco/quadrado */
-        box-shadow: 4px 4px 0px #000000 !important; /* Sombra sólida "cartoon/sketch" */
-        transition: transform 0.1s;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 8px !important;
+        box-shadow: none !important;
       }
 
       .card:hover {
-        transform: translate(-2px, -2px);
-        box-shadow: 6px 6px 0px #000000 !important;
+        transform: none !important;
+        box-shadow: none !important;
       }
 
-      .card--suporte-sim { border: 6px solid #000000 !important; }
-      .card--suporte-nao { border: 2px dashed #000000 !important; }
-      .card--suporte-em-breve { border: 2px solid #666666 !important; }
+      .card--suporte-sim {
+        border-color: #3fb950 !important;
+        border-width: 8px !important;
+      }
+
+      .card--suporte-nao {
+        border-color: #ff7b72 !important;
+        border-width: 8px !important;
+      }
+
+      .card--suporte-em-breve {
+        border-color: #d29922 !important;
+        border-width: 8px !important;
+      }
 
       .project-link, .video-link {
-        background: #000000 !important;
-        color: #ffffff !important;
-        border-radius: 0px !important;
-        border: 1px solid #000000 !important;
-        text-transform: uppercase;
-        font-weight: bold;
+        border-radius: 6px !important;
+        text-transform: none !important;
+        border: none !important;
       }
 
-      .project-link:hover, .video-link:hover {
-        background: #444444 !important;
+      .project-link {
+        background: var(--link-color) !important;
+        color: #0d1117 !important;
+        font-weight: 600 !important;
       }
 
-      /* Chat Widget estilo Kindle */
+      .video-link {
+        background: var(--link-color) !important;
+        color: #0d1117 !important;
+      }
+
       .chat-widget {
-        border-radius: 0px !important;
-        border: 2px solid #000000 !important;
-        background: #ffffff !important;
-        box-shadow: 4px 4px 0px #000000 !important;
+        border-radius: 999px !important;
+        border: 1px solid var(--border-color) !important;
+        background: rgba(22, 27, 34, 0.96) !important;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45) !important;
+      }
+
+      .chat-widget.open {
+        border-radius: 16px !important;
       }
 
       .chat-toggle {
-        border-radius: 0px !important;
-        background: #000000 !important;
+        border-radius: 999px !important;
+        background: var(--link-color) !important;
       }
 
       .chat-header {
-        background: #000000 !important;
-        color: #ffffff !important;
+        background: rgba(13, 17, 23, 0.85) !important;
+        color: var(--text-main) !important;
       }
 
       .chat-message {
-        border-radius: 0px !important;
-        border: 1px solid #000000 !important;
-        background: #f9f9f9 !important;
+        border-radius: 10px !important;
+        border: 1px solid var(--border-color) !important;
+        background: #0f141b !important;
       }
 
-      /* Esconder brilhos e efeitos neon */
       .video-modal {
-        box-shadow: 10px 10px 0px #000000 !important;
-        border: 3px solid #000000 !important;
+        box-shadow:
+          0 20px 45px rgba(0, 0, 0, 0.7),
+          0 0 90px rgba(88, 166, 255, 0.35),
+          0 0 140px rgba(88, 166, 255, 0.2) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
       }
     `;
 
-    console.log("Modo Kindle Ativado: Leitura clara e design minimalista.");
+    console.log('Modo Vinhadinho invertido: tema escuro original do index ativado.');
   })();
 </script>
