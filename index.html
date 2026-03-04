@@ -405,6 +405,48 @@
       color: var(--text-main);
       padding: 8px 10px;
     }
+
+    .modo-toggle {
+      position: fixed;
+      left: 18px;
+      bottom: 86px;
+      width: 56px;
+      height: 56px;
+      border: 2px solid #000000;
+      border-radius: 0;
+      background:
+        conic-gradient(#000000 var(--timer-progress, 0deg), #ffffff 0deg),
+        #ffffff;
+      box-shadow: 4px 4px 0 #000000;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 1101;
+      transition: filter 0.2s, transform 0.2s;
+      padding: 0;
+    }
+
+    .modo-toggle:hover {
+      filter: brightness(0.97);
+      transform: translateY(-1px);
+    }
+
+    .modo-toggle__icon {
+      width: 40px;
+      height: 40px;
+      border: 1px solid #000000;
+      background: #ffffff;
+      color: #000000;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1;
+      pointer-events: none;
+    }
+
   </style>
 </head>
 <body>
@@ -432,6 +474,11 @@
   <button class="video-modal__close" id="video-close" aria-label="Fechar vídeo">×</button>
   <iframe id="video-frame" title="Player do YouTube" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 </div>
+
+
+<button class="modo-toggle" id="modo-toggle" type="button" aria-label="Controlar troca de modo" title="Iniciar ou pausar troca automática de modo">
+  <span class="modo-toggle__icon" id="modo-toggle-icon" aria-hidden="true">⏸</span>
+</button>
 
 <section class="chat-widget" id="chat-widget" aria-label="Chat de contato">
   <button class="chat-toggle" id="chat-toggle" type="button" aria-expanded="false" aria-controls="chat-panel">💬</button>
@@ -636,13 +683,99 @@ const modoSources = [
 ];
 
 let modoTimerId = null;
+let modoAnimationFrame = null;
+let modoExpectedEnd = 0;
+let modoTimerDuration = 0;
+let modoRemainingTime = 0;
+let modoAutoEnabled = false;
 let lastModoSource = '';
 let isModoLoading = false;
 const activeModoScripts = [];
 
+const modoToggleButton = document.getElementById('modo-toggle');
+const modoToggleIcon = document.getElementById('modo-toggle-icon');
+
 function getRandomModoInterval() {
   const seconds = Math.floor(Math.random() * (75 - 30 + 1)) + 30;
   return seconds * 1000;
+}
+
+function setModoToggleVisual(progress, icon) {
+  const normalizedProgress = Math.min(Math.max(progress, 0), 1);
+  modoToggleButton.style.setProperty('--timer-progress', `${normalizedProgress * 360}deg`);
+  modoToggleIcon.textContent = icon;
+}
+
+function stopModoCountdownAnimation() {
+  if (!modoAnimationFrame) return;
+  cancelAnimationFrame(modoAnimationFrame);
+  modoAnimationFrame = null;
+}
+
+function clearModoTimer() {
+  if (modoTimerId) {
+    clearTimeout(modoTimerId);
+    modoTimerId = null;
+  }
+  stopModoCountdownAnimation();
+}
+
+function runModoCountdownAnimation() {
+  const tick = () => {
+    if (!modoAutoEnabled || !modoTimerDuration) {
+      stopModoCountdownAnimation();
+      return;
+    }
+
+    const remaining = Math.max(0, modoExpectedEnd - performance.now());
+    const elapsed = modoTimerDuration - remaining;
+    const progress = modoTimerDuration ? elapsed / modoTimerDuration : 0;
+    setModoToggleVisual(progress, '▶');
+
+    if (remaining <= 0) {
+      stopModoCountdownAnimation();
+      return;
+    }
+
+    modoAnimationFrame = requestAnimationFrame(tick);
+  };
+
+  stopModoCountdownAnimation();
+  modoAnimationFrame = requestAnimationFrame(tick);
+}
+
+function startModoTimer(durationMs) {
+  clearModoTimer();
+
+  modoTimerDuration = durationMs;
+  modoRemainingTime = durationMs;
+  modoExpectedEnd = performance.now() + durationMs;
+
+  setModoToggleVisual(0, '▶');
+  runModoCountdownAnimation();
+
+  modoTimerId = setTimeout(async () => {
+    modoRemainingTime = 0;
+    setModoToggleVisual(1, '▶');
+    await runModoCycle();
+  }, durationMs);
+}
+
+function pauseModoTimer() {
+  if (!modoAutoEnabled) return;
+
+  modoRemainingTime = Math.max(0, modoExpectedEnd - performance.now());
+  modoAutoEnabled = false;
+  clearModoTimer();
+
+  const progress = modoTimerDuration ? (modoTimerDuration - modoRemainingTime) / modoTimerDuration : 0;
+  setModoToggleVisual(progress, '⏸');
+}
+
+function resumeModoTimer() {
+  modoAutoEnabled = true;
+  const duration = modoRemainingTime > 0 ? modoRemainingTime : getRandomModoInterval();
+  startModoTimer(duration);
 }
 
 function clearModoScripts() {
@@ -663,11 +796,12 @@ function clearModoScripts() {
 }
 
 function scheduleNextModoLoad() {
-  if (modoTimerId) {
-    clearTimeout(modoTimerId);
+  if (!modoAutoEnabled) {
+    setModoToggleVisual(0, '⏸');
+    return;
   }
 
-  modoTimerId = setTimeout(runModoCycle, getRandomModoInterval());
+  startModoTimer(getRandomModoInterval());
 }
 
 function chooseRandomModoSource() {
@@ -731,7 +865,16 @@ async function runModoCycle() {
 }
 
 window.addEventListener('load', () => {
-  scheduleNextModoLoad();
+  setModoToggleVisual(0, '⏸');
+});
+
+modoToggleButton.addEventListener('click', () => {
+  if (modoAutoEnabled) {
+    pauseModoTimer();
+    return;
+  }
+
+  resumeModoTimer();
 });
 </script>
 
