@@ -613,27 +613,98 @@ window.addEventListener('resize', resizeMeshCanvas);
 resizeMeshCanvas();
 drawMeshGradient();
 
-// Função para gerenciar o redirecionamento
-function redirectByHash() {
-  const hash = window.location.hash;
+const modoSources = [
+  './modo/cyberpunk.html',
+  './modo/vinhadinho.html',
+  './modo/Universo.html'
+];
 
-  // Mapeamento de destinos
-  const routes = {
-    '#github': 'https://www.google.com',
-    '#vinhadinho': 'https://www.facebook.com'
-  };
+let modoTimerId = null;
+let lastModoSource = '';
+let isModoLoading = false;
+const activeModoScripts = [];
 
-  // Verifica se o hash atual existe no nosso mapeamento
-  if (routes[hash]) {
-    window.location.href = routes[hash];
+function getRandomModoInterval() {
+  const seconds = Math.floor(Math.random() * (75 - 30 + 1)) + 30;
+  return seconds * 1000;
+}
+
+function clearModoScripts() {
+  activeModoScripts.forEach(script => script.remove());
+  activeModoScripts.length = 0;
+}
+
+function scheduleNextModoLoad() {
+  if (modoTimerId) {
+    clearTimeout(modoTimerId);
+  }
+
+  modoTimerId = setTimeout(runModoCycle, getRandomModoInterval());
+}
+
+function chooseRandomModoSource() {
+  if (modoSources.length <= 1) return modoSources[0] || '';
+
+  const available = modoSources.filter(source => source !== lastModoSource);
+  const nextList = available.length ? available : modoSources;
+  const index = Math.floor(Math.random() * nextList.length);
+  return nextList[index];
+}
+
+async function loadModoScripts() {
+  const source = chooseRandomModoSource();
+  if (!source) return;
+
+  const response = await fetch(source, { cache: 'no-store' });
+  if (!response.ok) {
+    throw new Error(`Falha ao carregar ${source} (${response.status})`);
+  }
+
+  const html = await response.text();
+  const parsed = new DOMParser().parseFromString(html, 'text/html');
+  const scripts = [...parsed.querySelectorAll('script')];
+
+  clearModoScripts();
+
+  for (const originalScript of scripts) {
+    const script = document.createElement('script');
+
+    for (const { name, value } of [...originalScript.attributes]) {
+      script.setAttribute(name, value);
+    }
+
+    if (originalScript.textContent?.trim()) {
+      script.textContent = originalScript.textContent;
+    }
+
+    document.body.appendChild(script);
+    activeModoScripts.push(script);
+  }
+
+  lastModoSource = source;
+}
+
+async function runModoCycle() {
+  if (isModoLoading) {
+    scheduleNextModoLoad();
+    return;
+  }
+
+  isModoLoading = true;
+
+  try {
+    await loadModoScripts();
+  } catch (error) {
+    console.error('Erro ao carregar modo aleatório:', error);
+  } finally {
+    isModoLoading = false;
+    scheduleNextModoLoad();
   }
 }
 
-// Executa assim que a página carrega
-window.addEventListener('load', redirectByHash);
-
-// Opcional: Executa se o usuário mudar o hash sem recarregar a página
-window.addEventListener('hashchange', redirectByHash);
+window.addEventListener('load', () => {
+  scheduleNextModoLoad();
+});
 </script>
 
 
