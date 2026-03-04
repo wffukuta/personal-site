@@ -968,6 +968,7 @@ function openVideoEmbed(url) {
 }
 
 function closeVideoEmbed() {
+  stopVideoResize();
   videoModal.classList.remove('open');
   videoModal.setAttribute('aria-hidden', 'true');
   videoModal.hidden = true;
@@ -984,8 +985,28 @@ window.addEventListener('resize', () => {
   applyModalPosition();
 });
 
+let isVideoResizing = false;
+let activeResizePointerId = null;
+let cleanupVideoResizeListeners = () => {};
+
+function stopVideoResize() {
+  if (!isVideoResizing) return;
+
+  cleanupVideoResizeListeners();
+  cleanupVideoResizeListeners = () => {};
+
+  if (activeResizePointerId !== null && videoResize.hasPointerCapture(activeResizePointerId)) {
+    videoResize.releasePointerCapture(activeResizePointerId);
+  }
+
+  activeResizePointerId = null;
+  isVideoResizing = false;
+}
+
 videoResize.addEventListener('pointerdown', event => {
   event.preventDefault();
+
+  stopVideoResize();
 
   const startX = event.clientX;
   const startY = event.clientY;
@@ -996,7 +1017,13 @@ videoResize.addEventListener('pointerdown', event => {
   const fixedRight = startLeft + startWidth;
   const fixedBottom = startTop + startHeight;
 
-  function onPointerMove(moveEvent) {
+  isVideoResizing = true;
+  activeResizePointerId = event.pointerId;
+  videoResize.setPointerCapture(event.pointerId);
+
+  const onPointerMove = moveEvent => {
+    if (!isVideoResizing || moveEvent.pointerId !== activeResizePointerId) return;
+
     const deltaX = moveEvent.clientX - startX;
     const deltaY = moveEvent.clientY - startY;
 
@@ -1009,15 +1036,40 @@ videoResize.addEventListener('pointerdown', event => {
     modalState.y = fixedBottom - nextHeight;
 
     applyModalPosition();
-  }
+  };
 
-  function onPointerUp() {
+  const onPointerUp = upEvent => {
+    if (upEvent.pointerId !== activeResizePointerId) return;
+    stopVideoResize();
+  };
+
+  const onPointerCancel = cancelEvent => {
+    if (cancelEvent.pointerId !== activeResizePointerId) return;
+    stopVideoResize();
+  };
+
+  const onWindowBlur = () => {
+    stopVideoResize();
+  };
+
+  const onLostPointerCapture = lostEvent => {
+    if (lostEvent.pointerId !== activeResizePointerId) return;
+    stopVideoResize();
+  };
+
+  cleanupVideoResizeListeners = () => {
     window.removeEventListener('pointermove', onPointerMove);
     window.removeEventListener('pointerup', onPointerUp);
-  }
+    window.removeEventListener('pointercancel', onPointerCancel);
+    window.removeEventListener('blur', onWindowBlur);
+    videoResize.removeEventListener('lostpointercapture', onLostPointerCapture);
+  };
 
   window.addEventListener('pointermove', onPointerMove);
   window.addEventListener('pointerup', onPointerUp);
+  window.addEventListener('pointercancel', onPointerCancel);
+  window.addEventListener('blur', onWindowBlur);
+  videoResize.addEventListener('lostpointercapture', onLostPointerCapture);
 });
 
 positionModalBottomRight();
