@@ -268,7 +268,6 @@
       width: min(360px, calc(100vw - 36px));
       height: min(520px, calc(100vh - 36px));
       border-radius: 0;
-      z-index: 1102;
     }
 
     .chat-toggle {
@@ -434,15 +433,15 @@
     }
 
     .modo-toggle__icon {
-      width: 56px;
-      height: 56px;
-      border: none;
-      background: transparent;
+      width: 40px;
+      height: 40px;
+      border: 1px solid #000000;
+      background: #ffffff;
       color: #000000;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 22px;
+      font-size: 20px;
       font-weight: 700;
       line-height: 1;
       pointer-events: none;
@@ -478,7 +477,7 @@
 
 
 <button class="modo-toggle" id="modo-toggle" type="button" aria-label="Controlar troca de modo" title="Iniciar ou pausar troca automática de modo">
-  <span class="modo-toggle__icon" id="modo-toggle-icon" aria-hidden="true">❚❚</span>
+  <span class="modo-toggle__icon" id="modo-toggle-icon" aria-hidden="true">⏸</span>
 </button>
 
 <section class="chat-widget" id="chat-widget" aria-label="Chat de contato">
@@ -770,7 +769,7 @@ function pauseModoTimer() {
   clearModoTimer();
 
   const progress = modoTimerDuration ? (modoTimerDuration - modoRemainingTime) / modoTimerDuration : 0;
-  setModoToggleVisual(progress, '❚❚');
+  setModoToggleVisual(progress, '⏸');
 }
 
 function resumeModoTimer() {
@@ -798,7 +797,7 @@ function clearModoScripts() {
 
 function scheduleNextModoLoad() {
   if (!modoAutoEnabled) {
-    setModoToggleVisual(0, '❚❚');
+    setModoToggleVisual(0, '⏸');
     return;
   }
 
@@ -866,7 +865,7 @@ async function runModoCycle() {
 }
 
 window.addEventListener('load', () => {
-  setModoToggleVisual(0, '❚❚');
+  setModoToggleVisual(0, '⏸');
 });
 
 modoToggleButton.addEventListener('click', () => {
