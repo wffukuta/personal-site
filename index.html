@@ -739,6 +739,8 @@ let modoRemainingTime = 0;
 let modoAutoEnabled = false;
 let lastModoSource = '';
 let isModoLoading = false;
+let preloadedModoPayload = null;
+let preloadModoPromise = null;
 const activeModoScripts = [];
 
 const modoToggleButton = document.getElementById('modo-toggle');
@@ -826,6 +828,7 @@ function resumeModoTimer() {
   modoAutoEnabled = true;
   const duration = modoRemainingTime > 0 ? modoRemainingTime : getRandomModoInterval();
   startModoTimer(duration);
+  preloadNextModoScripts();
 }
 
 function clearModoScripts() {
@@ -847,11 +850,14 @@ function clearModoScripts() {
 
 function scheduleNextModoLoad() {
   if (!modoAutoEnabled) {
+    preloadedModoPayload = null;
+    preloadModoPromise = null;
     setModoToggleVisual(0, '▶');
     return;
   }
 
   startModoTimer(getRandomModoInterval());
+  preloadNextModoScripts();
 }
 
 function chooseRandomModoSource() {
@@ -883,7 +889,7 @@ function runModoGlitchTransition(duration = 520) {
 
 async function loadModoScripts() {
   const source = chooseRandomModoSource();
-  if (!source) return;
+  if (!source) return null;
 
   const response = await fetch(source, { cache: 'no-store' });
   if (!response.ok) {
@@ -892,19 +898,30 @@ async function loadModoScripts() {
 
   const html = await response.text();
   const parsed = new DOMParser().parseFromString(html, 'text/html');
-  const scripts = [...parsed.querySelectorAll('script')];
+  const scripts = [...parsed.querySelectorAll('script')].map(originalScript => ({
+    attributes: [...originalScript.attributes].map(({ name, value }) => ({ name, value })),
+    content: originalScript.textContent?.trim() ? originalScript.textContent : ''
+  }));
+
+  return { source, scripts };
+}
+
+function applyModoPayload(payload) {
+  if (!payload) return;
+
+  const { source, scripts } = payload;
 
   clearModoScripts();
 
   for (const originalScript of scripts) {
     const script = document.createElement('script');
 
-    for (const { name, value } of [...originalScript.attributes]) {
+    for (const { name, value } of originalScript.attributes) {
       script.setAttribute(name, value);
     }
 
-    if (originalScript.textContent?.trim()) {
-      script.textContent = originalScript.textContent;
+    if (originalScript.content) {
+      script.textContent = originalScript.content;
     }
 
     document.body.appendChild(script);
@@ -912,6 +929,24 @@ async function loadModoScripts() {
   }
 
   lastModoSource = source;
+}
+
+function preloadNextModoScripts() {
+  if (!modoAutoEnabled || isModoLoading || preloadModoPromise || preloadedModoPayload) {
+    return;
+  }
+
+  preloadModoPromise = loadModoScripts()
+    .then(payload => {
+      preloadedModoPayload = payload;
+    })
+    .catch(error => {
+      console.error('Erro ao pré-carregar modo aleatório:', error);
+      preloadedModoPayload = null;
+    })
+    .finally(() => {
+      preloadModoPromise = null;
+    });
 }
 
 async function runModoCycle() {
@@ -923,8 +958,19 @@ async function runModoCycle() {
   isModoLoading = true;
 
   try {
+    if (preloadModoPromise) {
+      await preloadModoPromise;
+    }
+
+    let payload = preloadedModoPayload;
+    preloadedModoPayload = null;
+
+    if (!payload) {
+      payload = await loadModoScripts();
+    }
+
     await runModoGlitchTransition();
-    await loadModoScripts();
+    applyModoPayload(payload);
   } catch (error) {
     console.error('Erro ao carregar modo aleatório:', error);
   } finally {
