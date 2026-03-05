@@ -316,15 +316,17 @@
       width: 32px;
       height: 32px;
       border-radius: 0;
-      border: 1px solid var(--border-color);
-      background: #21262d;
-      color: var(--text-main);
+      border: 1px solid color-mix(in srgb, var(--link-color) 70%, #000000);
+      background: var(--link-color);
+      color: #ffffff;
       font-size: 18px;
+      font-weight: 700;
       cursor: pointer;
     }
 
     .chat-close:hover {
-      border-color: var(--link-color);
+      background: color-mix(in srgb, var(--link-color) 85%, #ffffff);
+      border-color: color-mix(in srgb, var(--link-color) 80%, #000000);
     }
 
     .chat-compose {
@@ -333,16 +335,23 @@
     }
 
     .chat-compose button {
-      border: 1px solid var(--border-color);
-      background: #21262d;
-      color: var(--text-main);
+      border: 1px solid color-mix(in srgb, var(--link-color) 70%, #000000);
+      background: var(--link-color);
+      color: #ffffff;
+      font-weight: 700;
       padding: 8px 10px;
       border-radius: 0;
       cursor: pointer;
     }
 
     .chat-compose button:hover {
-      border-color: var(--link-color);
+      background: color-mix(in srgb, var(--link-color) 85%, #ffffff);
+      border-color: color-mix(in srgb, var(--link-color) 80%, #000000);
+    }
+
+    .chat-compose button:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
     }
 
     .chat-login-highlight {
