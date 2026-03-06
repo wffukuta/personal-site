@@ -1,0 +1,128 @@
+<script>
+(function() {
+    const header = document.querySelector('header');
+    const h1 = header.querySelector('h1');
+    if (!header || !h1) return;
+
+    // 1. Ajuste de Estilo para o Título (Z-index e Transição)
+    h1.style.position = 'relative';
+    h1.style.zIndex = '10'; // Garante que o texto fique na frente
+    h1.style.transition = 'text-shadow 0.1s linear';
+
+    // 2. Criar o canvas do jardim
+    const canvas = document.createElement('canvas');
+    canvas.id = 'garden-canvas';
+    Object.assign(canvas.style, {
+        position: 'absolute',
+        top: '0',
+        left: '0',
+        width: '100%',
+        height: '100%',
+        zIndex: '5', // Atrás do texto (10), na frente do fundo (0)
+        pointerEvents: 'none'
+    });
+    header.appendChild(canvas);
+
+    const ctx = canvas.getContext('2d');
+    let flowers = [];
+    const colors = ['#58a6ff', '#7b5cff', '#20c997', '#000000'];
+    const DURATION_MS = 20000; // 20 segundos de crescimento
+    const startTime = Date.now();
+
+    function resize() {
+        canvas.width = header.offsetWidth;
+        canvas.height = header.offsetHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Flower {
+        constructor() {
+            this.reset();
+            this.spawnTime = startTime + Math.random() * (DURATION_MS * 0.7);
+        }
+
+        reset() {
+            this.x = Math.random() * canvas.width;
+            this.maxStemHeight = Math.random() * 50 + 30;
+            this.stemHeight = 0;
+            this.flowerSize = 0;
+            this.maxFlowerSize = Math.random() * 12 + 8;
+            this.color = colors[Math.floor(Math.random() * colors.length)];
+            this.angle = (Math.random() - 0.5) * 0.6;
+            this.petals = Math.floor(Math.random() * 3) + 5;
+        }
+
+        draw(elapsed) {
+            if (Date.now() < this.spawnTime) return;
+
+            // Progresso individual de crescimento
+            const growthProgress = Math.min(1, (Date.now() - this.spawnTime) / 4000); 
+            this.stemHeight = this.maxStemHeight * growthProgress;
+            
+            ctx.save();
+            ctx.translate(this.x, canvas.height);
+            
+            // Desenhar Caule
+            ctx.beginPath();
+            ctx.strokeStyle = '#20c997';
+            ctx.lineWidth = 3;
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(15 * this.angle, -this.stemHeight/2, 8 * this.angle, -this.stemHeight);
+            ctx.stroke();
+
+            // Desenhar Flor se o caule cresceu o suficiente
+            if (growthProgress > 0.5) {
+                const fProgress = (growthProgress - 0.5) * 2;
+                this.flowerSize = this.maxFlowerSize * fProgress;
+                
+                ctx.translate(8 * this.angle, -this.stemHeight);
+                ctx.rotate(elapsed * 0.0005); 
+
+                for (let i = 0; i < this.petals; i++) {
+                    ctx.beginPath();
+                    ctx.fillStyle = this.color;
+                    ctx.rotate((Math.PI * 2) / this.petals);
+                    ctx.ellipse(this.flowerSize, 0, this.flowerSize, this.flowerSize/1.8, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#000';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+                
+                ctx.beginPath();
+                ctx.fillStyle = '#fff';
+                ctx.arc(0, 0, this.flowerSize/3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+    }
+
+    // Inicializar 50 flores
+    for (let i = 0; i < 50; i++) flowers.push(new Flower());
+
+    function animate() {
+        const now = Date.now();
+        const totalElapsed = now - startTime;
+        const progressTotal = Math.min(1, totalElapsed / DURATION_MS);
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Sincronizar Sombra do H1
+        // A sombra cresce de 0px para 6px (estilo brutalista)
+        const shadowOffset = (progressTotal * 6).toFixed(2);
+        if (progressTotal < 1) {
+            h1.style.textShadow = `${shadowOffset}px ${shadowOffset}px 0px rgba(0,0,0,1)`;
+        } else {
+            h1.style.textShadow = `6px 6px 0px rgba(0,0,0,1)`;
+        }
+
+        flowers.forEach(f => f.draw(totalElapsed));
+        requestAnimationFrame(animate);
+    }
+
+    animate();
+})();
+</script>
