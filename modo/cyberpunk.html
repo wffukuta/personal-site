@@ -1,150 +1,117 @@
 <script>
-  (function() {
-    // Limpeza defensiva: remove vestígios de outros temas antes de aplicar o atual
-    ['kindle-theme-overrides', 'universe-theme-overrides', 'cyberpunk-theme-overrides'].forEach(id => {
-      const styleTag = document.getElementById(id);
-      if (styleTag) styleTag.remove();
+ (function() {
+    const header = document.querySelector('header');
+    if (!header) return;
+
+    // 1. Criar o canvas do jardim
+    const canvas = document.createElement('canvas');
+    canvas.id = 'garden-canvas';
+    Object.assign(canvas.style, {
+        position: 'absolute',
+        top: '0',
+        left: '0',
+        width: '100%',
+        height: '100%',
+        zIndex: '1', // Fica atrás do texto (z-index 1) mas sobre o mesh (z-index 0)
+        pointerEvents: 'none'
     });
+    header.appendChild(canvas);
 
-    const root = document.documentElement;
-    root.removeAttribute('style');
-    // 1. Ajustar o Canvas para uma vibe de "Matrix/Hacker"
-    const canvas = document.getElementById('mesh-bg');
-    if (canvas) {
-      canvas.style.display = 'block';
-      canvas.style.opacity = '0.3'; // Mais sutil para não brigar com o neon
-      canvas.style.filter = 'hue-rotate(280deg) brightness(0.8)'; // Tona para roxo/rosa
-    }
-
-    // 2. Variáveis de Ambiente Neon
-    root.style.setProperty('--bg-body', '#050505'); // Preto puro
-    root.style.setProperty('--bg-card', '#0a0a0c');
-    root.style.setProperty('--text-main', '#00ff41'); // Verde Matrix/Terminal
-    root.style.setProperty('--text-muted', '#008f11');
-    root.style.setProperty('--link-color', '#fdee06'); // Amarelo Cyberpunk 2077
-
-    // 3. Injetar o CSS "High Tech, Low Life"
-    const styleId = 'cyberpunk-theme-overrides';
+    const ctx = canvas.getContext('2d');
+    let flowers = [];
+    const colors = ['#58a6ff', '#7b5cff', '#20c997', '#f2f2f2'];
     
-    let styleTag = document.getElementById(styleId);
-    if (!styleTag) {
-      styleTag = document.createElement('style');
-      styleTag.id = styleId;
-      document.head.appendChild(styleTag);
+    function resize() {
+        canvas.width = header.offsetWidth;
+        canvas.height = header.offsetHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Flower {
+        constructor() {
+            this.reset();
+            this.delay = Math.random() * 2000; // Delay inicial para não nascer tudo junto
+        }
+
+        reset() {
+            this.x = Math.random() * canvas.width;
+            this.y = canvas.height; // Começa na linha de baixo do header
+            this.size = 0;
+            this.maxSize = Math.random() * 15 + 10;
+            this.growth = Math.random() * 0.2 + 0.1;
+            this.stemHeight = 0;
+            this.maxStemHeight = Math.random() * 40 + 20;
+            this.color = colors[Math.floor(Math.random() * colors.length)];
+            this.angle = (Math.random() - 0.5) * 0.5; // Inclinação do caule
+            this.petals = Math.floor(Math.random() * 3) + 5;
+            this.life = 0;
+            this.born = Date.now();
+        }
+
+        draw() {
+            const now = Date.now();
+            if (now - this.born < this.delay) return;
+
+            ctx.save();
+            ctx.translate(this.x, canvas.height);
+            
+            // Desenhar Caule
+            ctx.beginPath();
+            ctx.strokeStyle = '#20c997';
+            ctx.lineWidth = 2;
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(10 * this.angle, -this.stemHeight/2, 5 * this.angle, -this.stemHeight);
+            ctx.stroke();
+
+            // Desenhar Flor no topo do caule
+            if (this.stemHeight >= this.maxStemHeight) {
+                ctx.translate(5 * this.angle, -this.stemHeight);
+                ctx.rotate(this.life * 0.01); // Rotação sutil
+                
+                for (let i = 0; i < this.petals; i++) {
+                    ctx.beginPath();
+                    ctx.fillStyle = this.color;
+                    ctx.rotate((Math.PI * 2) / this.petals);
+                    ctx.ellipse(this.size, 0, this.size, this.size/2, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                // Miolo
+                ctx.beginPath();
+                ctx.fillStyle = '#fff';
+                ctx.arc(0, 0, this.size/3, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (this.size < this.maxSize) this.size += this.growth;
+            }
+
+            if (this.stemHeight < this.maxStemHeight) this.stemHeight += 0.8;
+            
+            this.life++;
+            ctx.restore();
+        }
     }
 
-    styleTag.innerHTML = `
-      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;900&display=swap');
+    // Inicializar jardim (60 flores)
+    for (let i = 0; i < 60; i++) {
+        flowers.push(new Flower());
+    }
 
-      body {
-        font-family: 'JetBrains Mono', monospace !important;
-        background-color: #050505;
-        /* Efeito de Scanlines (linhas de TV antiga) */
-        background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
-                          linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-        background-size: 100% 4px, 3px 100%;
-      }
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        flowers.forEach(f => f.draw());
+        requestAnimationFrame(animate);
+    }
 
-      header {
-        background: #fdee06 !important;
-        border-bottom: 5px solid #000 !important;
-        clip-path: polygon(0 0, 100% 0, 100% 80%, 98% 100%, 0 100%);
-        padding: 50px 16px !important;
-      }
+    animate();
 
-      header h1 {
-        font-family: 'Orbitron', sans-serif !important;
-        color: #000 !important;
-        font-weight: 900 !important;
-        text-transform: uppercase;
-        font-size: 3rem;
-        letter-spacing: -2px;
-        font-style: italic;
-      }
+    // 2. Timer de 20 segundos para sumir suavemente
+    setTimeout(() => {
+        canvas.style.transition = 'opacity 3s ease';
+        canvas.style.opacity = '0';
+        setTimeout(() => canvas.remove(), 3000);
+    }, 20000);
 
-      /* Cards Estilo Interface de Combate (HUD) */
-      .about, .card {
-        background: #0a0a0c !important;
-        border-radius: 0px !important;
-        position: relative;
-        overflow: hidden;
-        /* Corte no canto inferior direito */
-        clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
-        transition: transform 0.2s, filter 0.2s;
-      }
-
-      .card:hover {
-        transform: skewX(-1deg);
-        filter: brightness(1.2);
-      }
-
-      /* Bordas Neon Requisitadas (Azul, Amarelo, Vermelho) */
-      .card--suporte-sim {
-        border: 2px solid #00f3ff !important; /* Ciano Neon */
-        box-shadow: inset 0 0 15px rgba(0, 243, 255, 0.2), 0 0 20px rgba(0, 243, 255, 0.4) !important;
-      }
-
-      .card--suporte-nao {
-        border: 2px solid #ff003c !important; /* Vermelho "Arasaka" */
-        box-shadow: inset 0 0 15px rgba(255, 0, 60, 0.2), 0 0 20px rgba(255, 0, 60, 0.4) !important;
-      }
-
-      .card--suporte-em-breve {
-        border: 2px solid #fdee06 !important; /* Amarelo Neon */
-        box-shadow: inset 0 0 15px rgba(253, 238, 6, 0.2), 0 0 20px rgba(253, 238, 6, 0.4) !important;
-      }
-
-      .card h2 {
-        font-family: 'Orbitron', sans-serif;
-        color: #fff !important;
-        text-shadow: 2px 2px #ff003c;
-      }
-
-      .row strong {
-        color: #fdee06 !important;
-      }
-
-      /* Botões de Glitch */
-      .project-link {
-        background: #00f3ff !important;
-        color: #000 !important;
-        border-radius: 0px !important;
-        font-weight: 900;
-        text-transform: uppercase;
-        border: none;
-        position: relative;
-      }
-
-      .project-link:hover {
-        box-shadow: -5px 0px 0px #ff003c, 5px 0px 0px #fdee06 !important;
-      }
-
-      /* Chat Widget Estilo Terminal de Dados */
-      .chat-widget {
-        border: 2px solid #fdee06 !important;
-        background: #000 !important;
-      }
-
-      .chat-toggle {
-        background: #fdee06 !important;
-        color: #000 !important;
-        border-radius: 0px !important;
-        clip-path: polygon(20% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 20%);
-      }
-
-      .chat-header {
-        background: #fdee06 !important;
-        color: #000 !important;
-        font-family: 'Orbitron', sans-serif;
-      }
-
-      .chat-message {
-        border: 1px solid #00ff41 !important;
-        background: rgba(0, 255, 65, 0.05) !important;
-        color: #00ff41 !important;
-      }
-    `;
-
-    console.log("CONEXÃO ESTABELECIDA: MODO CYBERPUNK ATIVO.");
-  })();
+})();
 </script>
