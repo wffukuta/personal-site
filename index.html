@@ -25,6 +25,41 @@
       margin: 0;
       position: relative;
       overflow-x: hidden;
+      transition: background-color 0.9s ease;
+      transform-style: preserve-3d;
+      perspective: 1400px;
+    }
+
+    body.screen-fall {
+      background-color: #000000;
+    }
+
+    body.screen-fall header,
+    body.screen-fall main,
+    body.screen-fall .chat-widget,
+    body.screen-fall .modo-toggle,
+    body.screen-fall .video-modal {
+      animation: fallBackScreen 1s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+      transform-origin: center top;
+    }
+
+    body.screen-rise header,
+    body.screen-rise main,
+    body.screen-rise .chat-widget,
+    body.screen-rise .modo-toggle,
+    body.screen-rise .video-modal {
+      animation: riseScreen 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+      transform-origin: center top;
+    }
+
+    @keyframes fallBackScreen {
+      0% { transform: translateY(0) rotateX(0deg) scale(1); opacity: 1; }
+      100% { transform: translateY(-120px) rotateX(74deg) scale(0.86); opacity: 0.08; }
+    }
+
+    @keyframes riseScreen {
+      0% { transform: translateY(-120px) rotateX(74deg) scale(0.86); opacity: 0.08; }
+      100% { transform: translateY(0) rotateX(0deg) scale(1); opacity: 1; }
     }
 
     #mesh-bg {
@@ -503,6 +538,74 @@
       }
     }
 
+    .project-prompt-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1600;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.9);
+      padding: 18px;
+    }
+
+    .project-prompt-overlay.visible {
+      display: flex;
+      animation: promptFadeIn 0.5s ease forwards;
+    }
+
+    @keyframes promptFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .project-prompt-card {
+      width: min(760px, 96vw);
+      border: 2px solid #ffffff;
+      background: #000000;
+      color: #ffffff;
+      padding: 26px;
+      text-align: center;
+      box-shadow: 10px 10px 0 #111111;
+    }
+
+    .project-prompt-card h2 {
+      margin: 0 0 16px;
+      font-size: clamp(18px, 3vw, 30px);
+      line-height: 1.3;
+    }
+
+    .project-prompt-form {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .project-prompt-form input {
+      width: min(520px, 100%);
+      border: 1px solid #ffffff;
+      background: #0a0a0a;
+      color: #ffffff;
+      padding: 11px 12px;
+      font-size: 14px;
+    }
+
+    .project-prompt-form button {
+      border: 1px solid #ffffff;
+      background: #ffffff;
+      color: #000000;
+      font-weight: 700;
+      padding: 11px 18px;
+      cursor: pointer;
+    }
+
+    .project-prompt-status {
+      min-height: 20px;
+      margin-top: 10px;
+      font-size: 12px;
+    }
+
   </style>
 </head>
 <body>
@@ -555,6 +658,17 @@
       <input id="chat-input" type="text" maxlength="500" placeholder="Escreva uma mensagem" autocomplete="off" disabled />
       <button type="submit" id="chat-send" disabled>Enviar</button>
     </form>
+  </div>
+</section>
+
+<section class="project-prompt-overlay" id="project-prompt-overlay" aria-hidden="true">
+  <div class="project-prompt-card">
+    <h2>VOCÊ TEM ALGUM PROJETO QUE GOSTARIA DE DESENVOLVER ?</h2>
+    <form class="project-prompt-form" id="project-prompt-form">
+      <input id="project-prompt-input" type="text" maxlength="500" placeholder="Digite sua resposta" autocomplete="off" />
+      <button type="submit" id="project-prompt-send">Enviar</button>
+    </form>
+    <div class="project-prompt-status" id="project-prompt-status"></div>
   </div>
 </section>
 
@@ -751,6 +865,7 @@ let isModoLoading = false;
 let preloadedModoPayload = null;
 let preloadModoPromise = null;
 const activeModoScripts = [];
+let unusedModoSources = [];
 
 const modoToggleButton = document.getElementById('modo-toggle');
 const modoToggleIcon = document.getElementById('modo-toggle-icon');
@@ -870,12 +985,22 @@ function scheduleNextModoLoad() {
 }
 
 function chooseRandomModoSource() {
-  if (modoSources.length <= 1) return modoSources[0] || '';
+  if (!modoSources.length) {
+    return { source: '', completedRound: false };
+  }
 
-  const available = modoSources.filter(source => source !== lastModoSource);
-  const nextList = available.length ? available : modoSources;
-  const index = Math.floor(Math.random() * nextList.length);
-  return nextList[index];
+  if (!unusedModoSources.length) {
+    unusedModoSources = [...modoSources].sort(() => Math.random() - 0.5);
+
+    if (unusedModoSources.length > 1 && unusedModoSources[0] === lastModoSource) {
+      const moved = unusedModoSources.shift();
+      unusedModoSources.push(moved);
+    }
+  }
+
+  const source = unusedModoSources.shift() || '';
+  const completedRound = unusedModoSources.length === 0;
+  return { source, completedRound };
 }
 
 function runModoGlitchTransition(duration = 520) {
@@ -897,7 +1022,8 @@ function runModoGlitchTransition(duration = 520) {
 }
 
 async function loadModoScripts() {
-  const source = chooseRandomModoSource();
+  const selection = chooseRandomModoSource();
+  const { source, completedRound } = selection;
   if (!source) return null;
 
   const response = await fetch(source, { cache: 'no-store' });
@@ -912,13 +1038,13 @@ async function loadModoScripts() {
     content: originalScript.textContent?.trim() ? originalScript.textContent : ''
   }));
 
-  return { source, scripts };
+  return { source, scripts, completedRound };
 }
 
 function applyModoPayload(payload) {
   if (!payload) return;
 
-  const { source, scripts } = payload;
+  const { source, scripts, completedRound } = payload;
 
   clearModoScripts();
 
@@ -938,6 +1064,10 @@ function applyModoPayload(payload) {
   }
 
   lastModoSource = source;
+
+  if (completedRound) {
+    window.dispatchEvent(new CustomEvent('modo:all-sources-completed'));
+  }
 }
 
 function preloadNextModoScripts() {
@@ -1270,6 +1400,46 @@ const chatForm = document.getElementById('chat-form');
 const chatInput = document.getElementById('chat-input');
 const chatSend = document.getElementById('chat-send');
 
+const projectPromptOverlay = document.getElementById('project-prompt-overlay');
+const projectPromptForm = document.getElementById('project-prompt-form');
+const projectPromptInput = document.getElementById('project-prompt-input');
+const projectPromptSend = document.getElementById('project-prompt-send');
+const projectPromptStatus = document.getElementById('project-prompt-status');
+
+let promptVisible = false;
+
+function showProjectPromptOverlay() {
+  if (promptVisible || !projectPromptOverlay) return;
+
+  document.body.classList.remove('screen-rise');
+  document.body.classList.add('screen-fall');
+
+  setTimeout(() => {
+    projectPromptOverlay.classList.add('visible');
+    projectPromptOverlay.setAttribute('aria-hidden', 'false');
+    projectPromptInput?.focus();
+    promptVisible = true;
+  }, 750);
+}
+
+function hideProjectPromptOverlay() {
+  if (!projectPromptOverlay) return;
+
+  projectPromptOverlay.classList.remove('visible');
+  projectPromptOverlay.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('screen-fall');
+  document.body.classList.add('screen-rise');
+  promptVisible = false;
+
+  setTimeout(() => {
+    document.body.classList.remove('screen-rise');
+  }, 900);
+}
+
+window.addEventListener('modo:all-sources-completed', () => {
+  showProjectPromptOverlay();
+});
+
 let messagesRef = null;
 let stopListeningMessages = null;
 
@@ -1348,6 +1518,7 @@ onAuthStateChanged(auth, user => {
   }
 });
 
+
 chatForm.addEventListener('submit', async event => {
   event.preventDefault();
 
@@ -1364,6 +1535,54 @@ chatForm.addEventListener('submit', async event => {
 
   chatInput.value = '';
   chatInput.focus();
+});
+
+projectPromptForm?.addEventListener('submit', async event => {
+  event.preventDefault();
+
+  const text = projectPromptInput.value.trim();
+  if (!text) {
+    projectPromptStatus.textContent = 'Digite uma resposta antes de enviar.';
+    return;
+  }
+
+  projectPromptStatus.textContent = '';
+  projectPromptSend.disabled = true;
+
+  try {
+    let user = auth.currentUser;
+
+    if (!user) {
+      await signInWithPopup(auth, provider);
+      user = auth.currentUser;
+    }
+
+    if (!user) {
+      throw new Error('Não foi possível identificar o usuário.');
+    }
+
+    const suggestionsRef = ref(database, `projectRequests/${user.uid}`);
+
+    await push(suggestionsRef, {
+      uid: user.uid,
+      author: user.displayName || user.email || 'Visitante',
+      text,
+      createdAt: serverTimestamp()
+    });
+
+    projectPromptInput.value = '';
+    projectPromptStatus.textContent = 'Resposta enviada com sucesso!';
+
+    setTimeout(() => {
+      projectPromptStatus.textContent = '';
+      hideProjectPromptOverlay();
+    }, 450);
+  } catch (error) {
+    console.error('Falha ao enviar proposta do usuário:', error);
+    projectPromptStatus.textContent = 'Não foi possível enviar agora. Tente novamente.';
+  } finally {
+    projectPromptSend.disabled = false;
+  }
 });
 </script>
 
