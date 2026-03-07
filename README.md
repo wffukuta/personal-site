@@ -1,39 +1,47 @@
-# W.F.Fukuta — Personal Site
+# **Personal Site — Arquitetura de Engajamento Temporal**
 
-Portfólio pessoal com foco em projetos de engenharia de software, evolução técnica e entregas práticas publicadas para web.
+O tempo como mecanismo de conversão. Este projeto subverte o portfólio tradicional, utilizando uma progressão de estímulos para transformar visitantes casuais em leads qualificados.
 
-## Objetivo
-Este repositório reúne uma vitrine simples e direta dos meus projetos, com informações de:
-- domínio (gênero)
-- status atual
-- suporte
-- stack usada
-- resultado entregue
-- descrição resumida
-- link para acesso
+---
 
-## Sobre o site
-A página principal carrega os dados de projetos a partir de uma planilha publicada em TSV no Google Sheets, renderizando cards dinamicamente no front-end.
+<br><br>
+## **A Tese: Engenharia de Atenção**
+Em vez de entregar toda a informação de imediato, esta arquitetura utiliza ciclos temporais para modular a experiência do usuário, baseando-se em quatro pilares estratégicos:
 
-## Stack técnica
-- HTML5
-- CSS3
-- JavaScript (vanilla)
-- Google Sheets (TSV) como fonte de conteúdo
+> **AUTORIDADE:** Exposição técnica imediata para estabelecer autoridade. O visitante encontra projetos desenvolvidos, repositórios, vídeos e histórico de produção. Essa etapa responde à pergunta: Essa pessoa realmente consegue desenvolver um projeto? Sem essa validação, a conversão é enfraquecida.
 
-## Como executar localmente
-```bash
-python3 -m http.server 4173 --bind 0.0.0.0
+   
+> **RETENÇÃO:** O botão Play rompe o padrão de leitura e inicia um cronômetro de expectativa.O visitante sente curiosidade sobre o que acontece ao clicar. Isso ativa um mecanismo de exploração: um cronômetro inicia, o sistema promete revelar algo e o usuário passa a esperar pela próxima interação.
+
+   
+> **RECOMPENSA:** Liberação de micro-experiências visuais e atmosféricas (Modos) que recompensam a espera. O visitante entra em um ciclo de comportamento: esperar → receber recompensa → explorar → esperar novamente.
+
+     
+> **FECHAMENTO:**  A remoção súbita de estímulos cria o momento ideal para a chamada de ação. Esse silêncio visual cria um vácuo de atenção usado para capturar um lead qualificado.
+
+---
+
+
+<br><br>
+## **Estrutura do Projeto**
+
+
+```text
+📦 Arquitetura de Engajamento Temporal
+ ┣ 📜 index.html------------------# Arquitetura Aplicada
+ ┣ 📂 modo/-----------------------# Micro-experiências de Recompensa
+ ┗ 📜 README----------------------# Documentação estratégica
 ```
-Depois acesse `http://localhost:4173`.
 
-## Diferenciais
-- Estrutura leve, sem dependências pesadas.
-- Atualização de conteúdo orientada por planilha.
-- Interface em tema escuro com feedback visual de status de suporte.
+<br><br>
+## **Decisões de Engenharia & Arquitetura**
+A escolha das tecnologias foi pautada em eficiência operacional e escalabilidade de conteúdo:
 
-## Próximos passos
-- Filtros por status/gênero.
-- Busca por projeto.
-- Melhorias de SEO e metadados sociais.
-- Seção de contato e links profissionais (GitHub/LinkedIn).
+> Estratégia de Headless CMS (Google Sheets)
+Utilizo o Google Sheets (via TSV) como fonte de dados. Isso permite atualizações em tempo real enquanto gerencio varios projetos através de uma unica planilha como painel sem necessidade de novos deploys, garantindo uma separação total entre dados e renderização.
+
+> Micro-Frontends de Experiência (/modo/)
+Os modos interativos são isolados em um ambiente Sandbox. Essa modularidade permite injetar novas tecnologias (Canvas, WebGL, Three.js) de forma desacoplada, facilitando testes de retenção sem risco de regressão no core do sistema.
+
+> Persistência e Captura (Firebase)
+Integração com Firebase Realtime DB para captura assíncrona de leads, armazenando não apenas o contato, mas o contexto da jornada do usuário.
