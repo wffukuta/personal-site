@@ -297,12 +297,14 @@
       overflow: hidden;
       z-index: 1100;
       transition: width 0.35s ease, height 0.35s ease, border-radius 0.35s ease;
+      animation: floatWidget 3s ease-in-out infinite;
     }
 
     .chat-widget.open {
       width: min(360px, calc(100vw - 36px));
       height: min(520px, calc(100vh - 36px));
       border-radius: 0;
+      animation: none;
     }
 
     .chat-toggle {
@@ -470,11 +472,19 @@
       z-index: 1099;
       transition: filter 0.2s, transform 0.2s;
       padding: 0;
+      animation: floatWidget 3s ease-in-out infinite;
+      animation-delay: 0.15s;
     }
 
     .modo-toggle:hover {
       filter: brightness(0.97);
       transform: translateY(-1px);
+    }
+
+    @keyframes floatWidget {
+      0%,
+      100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
     }
 
     .modo-toggle__icon {
