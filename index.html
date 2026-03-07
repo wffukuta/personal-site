@@ -891,6 +891,7 @@ let preloadedModoPayload = null;
 let preloadModoPromise = null;
 const activeModoScripts = [];
 let unusedModoSources = [];
+let modoControlDisabled = false;
 
 const modoToggleButton = document.getElementById('modo-toggle');
 const modoToggleIcon = document.getElementById('modo-toggle-icon');
@@ -919,6 +920,18 @@ function clearModoTimer() {
     modoTimerId = null;
   }
   stopModoCountdownAnimation();
+}
+
+function disableModoAutoControl() {
+  modoControlDisabled = true;
+  modoAutoEnabled = false;
+  clearModoTimer();
+  preloadedModoPayload = null;
+  preloadModoPromise = null;
+  modoRemainingTime = 0;
+  modoTimerDuration = 0;
+  modoExpectedEnd = 0;
+  setModoToggleVisual(0, '▶');
 }
 
 function runModoCountdownAnimation() {
@@ -974,6 +987,8 @@ function pauseModoTimer() {
 }
 
 function resumeModoTimer() {
+  if (modoControlDisabled) return;
+
   modoAutoEnabled = true;
   const duration = modoRemainingTime > 0 ? modoRemainingTime : getRandomModoInterval();
   startModoTimer(duration);
@@ -998,7 +1013,7 @@ function clearModoScripts() {
 }
 
 function scheduleNextModoLoad() {
-  if (!modoAutoEnabled) {
+  if (!modoAutoEnabled || modoControlDisabled) {
     preloadedModoPayload = null;
     preloadModoPromise = null;
     setModoToggleVisual(0, '▶');
@@ -1047,6 +1062,8 @@ function runModoGlitchTransition(duration = 520) {
 }
 
 async function loadModoScripts() {
+  if (modoControlDisabled) return null;
+
   const selection = chooseRandomModoSource();
   const { source, completedRound } = selection;
   if (!source) return null;
@@ -1067,7 +1084,7 @@ async function loadModoScripts() {
 }
 
 function applyModoPayload(payload) {
-  if (!payload) return;
+  if (!payload || modoControlDisabled) return;
 
   const { source, scripts, completedRound } = payload;
 
@@ -1096,7 +1113,7 @@ function applyModoPayload(payload) {
 }
 
 function preloadNextModoScripts() {
-  if (!modoAutoEnabled || isModoLoading || preloadModoPromise || preloadedModoPayload) {
+  if (modoControlDisabled || !modoAutoEnabled || isModoLoading || preloadModoPromise || preloadedModoPayload) {
     return;
   }
 
@@ -1114,6 +1131,8 @@ function preloadNextModoScripts() {
 }
 
 async function runModoCycle() {
+  if (modoControlDisabled) return;
+
   if (isModoLoading) {
     scheduleNextModoLoad();
     return;
@@ -1133,7 +1152,16 @@ async function runModoCycle() {
       payload = await loadModoScripts();
     }
 
+    if (modoControlDisabled) {
+      return;
+    }
+
     await runModoGlitchTransition();
+
+    if (modoControlDisabled) {
+      return;
+    }
+
     applyModoPayload(payload);
   } catch (error) {
     console.error('Erro ao carregar modo aleatório:', error);
@@ -1148,6 +1176,8 @@ window.addEventListener('load', () => {
 });
 
 modoToggleButton.addEventListener('click', () => {
+  if (modoControlDisabled) return;
+
   if (modoAutoEnabled) {
     pauseModoTimer();
     return;
@@ -1470,6 +1500,8 @@ function hideProjectPromptOverlay() {
 
 function hideModoToggleButton() {
   if (!modoToggleButton) return;
+
+  disableModoAutoControl();
 
   modoToggleButton.style.visibility = 'hidden';
   modoToggleButton.setAttribute('aria-hidden', 'true');
