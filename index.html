@@ -26,6 +26,10 @@
       position: relative;
       overflow-x: hidden;
       transition: background-color 0.9s ease;
+    }
+
+    .screen-stage {
+      position: relative;
       transform-style: preserve-3d;
       perspective: 1400px;
     }
@@ -34,20 +38,12 @@
       background-color: #000000;
     }
 
-    body.screen-fall header,
-    body.screen-fall main,
-    body.screen-fall .chat-widget,
-    body.screen-fall .modo-toggle,
-    body.screen-fall .video-modal {
+    body.screen-fall .screen-stage {
       animation: fallBackScreen 1s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
       transform-origin: center top;
     }
 
-    body.screen-rise header,
-    body.screen-rise main,
-    body.screen-rise .chat-widget,
-    body.screen-rise .modo-toggle,
-    body.screen-rise .video-modal {
+    body.screen-rise .screen-stage {
       animation: riseScreen 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
       transform-origin: center top;
     }
@@ -635,6 +631,8 @@
 </head>
 <body>
 
+<div class="screen-stage">
+
 <div class="glitch-transition" id="glitch-transition" aria-hidden="true"></div>
 
 <header>
@@ -659,6 +657,8 @@
   <div class="video-modal__resize" id="video-resize" aria-label="Redimensionar janela"></div>
   <button class="video-modal__close" id="video-close" aria-label="Fechar vídeo">×</button>
   <iframe id="video-frame" title="Player do YouTube" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+</div>
+
 </div>
 
 
