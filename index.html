@@ -284,6 +284,7 @@
       margin-top: 10px;
     }
 
+    /* --- Atualização dos botões flutuantes --- */
     .chat-widget {
       position: fixed;
       left: 18px;
@@ -295,12 +296,16 @@
       background: #ffffff;
       box-shadow: 4px 4px 0 #000000;
       overflow: hidden;
-      z-index: 1100;
-      transition: width 0.35s ease, height 0.35s ease, border-radius 0.35s ease;
+      z-index: 9999;
+      transition: width 0.35s ease, height 0.35s ease, border-radius 0.35s ease, bottom 0.3s ease;
       animation: floatWidget 3s ease-in-out infinite;
+
+      /* Impede que o transform do body quebre o posicionamento fixo */
+      transform: translateZ(0);
     }
 
     .chat-widget.open {
+      bottom: 18px;
       width: min(360px, calc(100vw - 36px));
       height: min(520px, calc(100vh - 36px));
       border-radius: 0;
@@ -469,11 +474,14 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      z-index: 1099;
-      transition: filter 0.2s, transform 0.2s;
+      z-index: 9998;
+      transition: filter 0.2s, transform 0.2s, bottom 0.3s ease;
       padding: 0;
       animation: floatWidget 3s ease-in-out infinite;
       animation-delay: 0.15s;
+
+      /* Impede que o transform do body quebre o posicionamento fixo */
+      transform: translateZ(0);
     }
 
     .modo-toggle:hover {
@@ -483,8 +491,8 @@
 
     @keyframes floatWidget {
       0%,
-      100% { transform: translateY(0); }
-      50% { transform: translateY(-6px); }
+      100% { transform: translateY(0) translateZ(0); }
+      50% { transform: translateY(-10px) translateZ(0); }
     }
 
     .modo-toggle__icon {
