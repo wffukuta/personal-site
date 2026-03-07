@@ -503,11 +503,215 @@
       }
     }
 
+    .surprise-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    .surprise-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .surprise-stage {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.55);
+      overflow: hidden;
+    }
+
+    .surprise-box-wrap {
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      bottom: -220px;
+      left: 50%;
+      transform: translateX(-50%) rotate(0deg);
+      opacity: 0;
+    }
+
+    .surprise-overlay.box-arrival .surprise-box-wrap {
+      animation: riseSpinBox 1.6s ease-out forwards;
+    }
+
+    .surprise-box {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 120px;
+      background: #ffffff;
+      border: 4px solid #000000;
+      box-shadow: 8px 8px 0 #000;
+    }
+
+    .surprise-box-lid {
+      position: absolute;
+      left: -4px;
+      top: 42px;
+      width: calc(100% + 8px);
+      height: 32px;
+      background: #ffffff;
+      border: 4px solid #000000;
+      transform-origin: left center;
+      transition: transform 0.7s ease;
+    }
+
+    .surprise-overlay.box-opened .surprise-box-lid {
+      transform: rotate(-120deg);
+    }
+
+    .surprise-tap-text {
+      position: absolute;
+      top: calc(50% - 140px);
+      width: 100%;
+      text-align: center;
+      font-size: 26px;
+      color: #fff;
+      letter-spacing: 1px;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      text-transform: uppercase;
+    }
+
+    .surprise-overlay.ready .surprise-tap-text {
+      opacity: 1;
+    }
+
+    body.page-sucked {
+      animation: pageTwistIntoBox 1.3s ease-in forwards;
+      transform-origin: center center;
+    }
+
+    .surprise-whiteout {
+      position: absolute;
+      inset: 0;
+      background: #fff;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .surprise-overlay.white .surprise-whiteout {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .plan-prompt {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      background: #fff;
+      color: #000;
+      padding: 20px;
+    }
+
+    .surprise-overlay.prompt .plan-prompt {
+      display: flex;
+    }
+
+    .plan-typewriter {
+      max-width: 720px;
+      text-align: center;
+      font-size: clamp(18px, 2.2vw, 30px);
+      min-height: 80px;
+    }
+
+    .plan-form {
+      position: absolute;
+      bottom: 24px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .plan-form input {
+      width: min(340px, 70vw);
+      border: 2px solid #000;
+      padding: 8px 10px;
+      font-family: inherit;
+    }
+
+    .plan-form button {
+      border: 2px solid #000;
+      background: #000;
+      color: #fff;
+      padding: 8px 14px;
+      cursor: pointer;
+    }
+
+    .shatter-layer {
+      position: absolute;
+      inset: 0;
+      display: none;
+      overflow: hidden;
+      pointer-events: none;
+      background: transparent;
+    }
+
+    .surprise-overlay.shatter .shatter-layer {
+      display: block;
+    }
+
+    .glass-piece {
+      position: absolute;
+      top: 0;
+      width: 20%;
+      height: 34%;
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(0, 0, 0, 0.22);
+      clip-path: polygon(50% 0%, 100% 22%, 85% 100%, 10% 92%, 0 18%);
+      animation: glassFall 900ms ease-in forwards;
+    }
+
+    @keyframes riseSpinBox {
+      0% { bottom: -220px; opacity: 0; transform: translateX(-50%) rotate(0deg); }
+      70% { opacity: 1; }
+      100% { bottom: calc(50% - 90px); opacity: 1; transform: translateX(-50%) rotate(720deg); }
+    }
+
+    @keyframes pageTwistIntoBox {
+      0% { transform: scale(1) rotate(0deg); filter: none; }
+      100% { transform: scale(0.08) rotate(15deg) translateY(300px); filter: blur(10px); opacity: 0; }
+    }
+
+    @keyframes glassFall {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(120vh) rotate(var(--glass-rot, 0deg)); opacity: 0; }
+    }
+
   </style>
 </head>
 <body>
 
 <div class="glitch-transition" id="glitch-transition" aria-hidden="true"></div>
+
+<section class="surprise-overlay" id="surprise-overlay" aria-hidden="true">
+  <div class="surprise-stage">
+    <p class="surprise-tap-text">TOQUE E ABRA A CAIXA</p>
+    <div class="surprise-box-wrap" id="surprise-box-trigger">
+      <div class="surprise-box"></div>
+      <div class="surprise-box-lid"></div>
+    </div>
+  </div>
+  <div class="surprise-whiteout"></div>
+  <div class="plan-prompt" id="plan-prompt">
+    <div class="plan-typewriter" id="plan-typewriter"></div>
+    <form class="plan-form" id="plan-form">
+      <input id="plan-input" type="text" maxlength="400" placeholder="Digite seu projeto" required />
+      <button type="submit" id="plan-send">Enviar</button>
+    </form>
+  </div>
+  <div class="shatter-layer" id="shatter-layer"></div>
+</section>
 
 <header>
   <canvas id="mesh-bg" aria-hidden="true"></canvas>
@@ -740,6 +944,8 @@ const modoSources = [
   './modo/Universo.html'
 ];
 
+const modoUniqueSources = [...new Set(modoSources)];
+
 let modoTimerId = null;
 let modoAnimationFrame = null;
 let modoExpectedEnd = 0;
@@ -748,6 +954,7 @@ let modoRemainingTime = 0;
 let modoAutoEnabled = false;
 let lastModoSource = '';
 let isModoLoading = false;
+const modoCompletedRound = new Set();
 let preloadedModoPayload = null;
 let preloadModoPromise = null;
 const activeModoScripts = [];
@@ -870,12 +1077,18 @@ function scheduleNextModoLoad() {
 }
 
 function chooseRandomModoSource() {
-  if (modoSources.length <= 1) return modoSources[0] || '';
+  if (modoUniqueSources.length <= 1) return modoUniqueSources[0] || '';
 
-  const available = modoSources.filter(source => source !== lastModoSource);
-  const nextList = available.length ? available : modoSources;
-  const index = Math.floor(Math.random() * nextList.length);
-  return nextList[index];
+  const remainingInRound = modoUniqueSources.filter(source => !modoCompletedRound.has(source));
+  let candidates = remainingInRound.length ? remainingInRound : modoUniqueSources;
+
+  if (candidates.length > 1 && lastModoSource) {
+    const filtered = candidates.filter(source => source !== lastModoSource);
+    if (filtered.length) candidates = filtered;
+  }
+
+  const index = Math.floor(Math.random() * candidates.length);
+  return candidates[index];
 }
 
 function runModoGlitchTransition(duration = 520) {
@@ -938,6 +1151,12 @@ function applyModoPayload(payload) {
   }
 
   lastModoSource = source;
+  modoCompletedRound.add(source);
+
+  if (modoCompletedRound.size === modoUniqueSources.length && modoUniqueSources.length) {
+    window.dispatchEvent(new CustomEvent('all-modos-completed'));
+    modoCompletedRound.clear();
+  }
 }
 
 function preloadNextModoScripts() {
@@ -1269,8 +1488,18 @@ const chatLogin = document.getElementById('chat-login');
 const chatForm = document.getElementById('chat-form');
 const chatInput = document.getElementById('chat-input');
 const chatSend = document.getElementById('chat-send');
+const surpriseOverlay = document.getElementById('surprise-overlay');
+const surpriseBoxTrigger = document.getElementById('surprise-box-trigger');
+const planPrompt = document.getElementById('plan-prompt');
+const planTypewriter = document.getElementById('plan-typewriter');
+const planForm = document.getElementById('plan-form');
+const planInput = document.getElementById('plan-input');
+const planSend = document.getElementById('plan-send');
+const shatterLayer = document.getElementById('shatter-layer');
 
 let messagesRef = null;
+let surpriseActive = false;
+let surpriseReady = false;
 let stopListeningMessages = null;
 
 function escutarMensagens(nodeRef) {
@@ -1328,6 +1557,94 @@ chatLogin.addEventListener('click', async () => {
   }
 });
 
+function startTypewriter(text, speed = 42) {
+  planTypewriter.textContent = '';
+  let index = 0;
+
+  const tick = () => {
+    if (index > text.length) return;
+    planTypewriter.textContent = text.slice(0, index);
+    index += 1;
+    setTimeout(tick, speed);
+  };
+
+  tick();
+}
+
+function spawnGlassShatter() {
+  shatterLayer.innerHTML = '';
+
+  const cols = 5;
+  const rows = 3;
+  const pieceWidth = 100 / cols;
+  const pieceHeight = 100 / rows;
+
+  for (let row = 0; row < rows; row += 1) {
+    for (let col = 0; col < cols; col += 1) {
+      const piece = document.createElement('div');
+      piece.className = 'glass-piece';
+      piece.style.left = `${col * pieceWidth}%`;
+      piece.style.top = `${row * pieceHeight}%`;
+      piece.style.width = `${pieceWidth}%`;
+      piece.style.height = `${pieceHeight}%`;
+      piece.style.setProperty('--glass-rot', `${Math.random() * 180 - 90}deg`);
+      piece.style.animationDelay = `${Math.random() * 200}ms`;
+      shatterLayer.appendChild(piece);
+    }
+  }
+}
+
+function resetSurpriseFlow() {
+  surpriseOverlay.className = 'surprise-overlay';
+  surpriseOverlay.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('page-sucked');
+  planTypewriter.textContent = '';
+  planInput.value = '';
+  shatterLayer.innerHTML = '';
+  surpriseActive = false;
+  surpriseReady = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function openPlanPrompt() {
+  surpriseOverlay.classList.remove('white');
+  surpriseOverlay.classList.add('prompt');
+  planPrompt.hidden = false;
+  startTypewriter('Todos temos planos de projetos, me conte quais são os seus projetos');
+  setTimeout(() => planInput.focus(), 500);
+}
+
+function startSurpriseSequence() {
+  if (surpriseActive) return;
+  surpriseActive = true;
+
+  surpriseOverlay.classList.add('active', 'box-arrival');
+  surpriseOverlay.setAttribute('aria-hidden', 'false');
+
+  setTimeout(() => {
+    surpriseOverlay.classList.add('ready');
+    surpriseReady = true;
+  }, 1650);
+}
+
+window.addEventListener('all-modos-completed', startSurpriseSequence);
+
+surpriseBoxTrigger.addEventListener('click', () => {
+  if (!surpriseReady || !surpriseActive) return;
+
+  surpriseReady = false;
+  surpriseOverlay.classList.add('box-opened');
+  document.body.classList.add('page-sucked');
+
+  setTimeout(() => {
+    surpriseOverlay.classList.add('white');
+  }, 900);
+
+  setTimeout(() => {
+    openPlanPrompt();
+  }, 4900);
+});
+
 onAuthStateChanged(auth, user => {
   if (user) {
     messagesRef = ref(database, `chats/${user.uid}`);
@@ -1345,6 +1662,40 @@ onAuthStateChanged(auth, user => {
     chatLoginHighlight.hidden = false;
     chatInput.disabled = true;
     chatSend.disabled = true;
+  }
+});
+
+planForm.addEventListener('submit', async event => {
+  event.preventDefault();
+
+  const text = planInput.value.trim();
+  if (!text) return;
+
+  const user = auth.currentUser;
+  const uid = user?.uid || 'visitantes';
+  const plansRef = ref(database, `projectPlans/${uid}`);
+
+  planSend.disabled = true;
+
+  try {
+    await push(plansRef, {
+      author: user?.displayName || user?.email || 'Visitante',
+      uid,
+      text,
+      createdAt: serverTimestamp()
+    });
+
+    surpriseOverlay.classList.remove('prompt');
+    surpriseOverlay.classList.add('shatter');
+    spawnGlassShatter();
+
+    setTimeout(() => {
+      resetSurpriseFlow();
+    }, 1300);
+  } catch (error) {
+    console.error('Erro ao salvar plano de projeto:', error);
+  } finally {
+    planSend.disabled = false;
   }
 });
 
