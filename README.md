@@ -1,11 +1,29 @@
-# **AET — Arquitetura de Engajamento Temporal**
+<div align="center">
 
-O tempo como mecanismo de conversão. Este projeto subverte o portfólio tradicional, utilizando uma progressão de estímulos para transformar visitantes casuais em leads qualificados.
+# ARQUITETURA DE ENGAJAMENTO TEMPORAL
+
+<br>
+
+<a href="https://wffukuta.github.io/arquitetura-engajamento-temporal/">
+  <img src="https://img.shields.io/badge/VISUALIZAR_ARQUITETURA_APLICADA-2ea44f?style=for-the-badge" alt="VISUALIZAR" width="300">
+</a>
+</a>
+<br>
+<br>
+<br>
+<br>
+</div>
+<br>
+
+
+# **AET: O TEMPO COMO ATIVO DE CONVERSÃO**
+
+O tempo como mecanismo de conversão. Este projeto subverte o portfólio tradicional, utilizando uma progressão de estímulos para transformar visitantes casuais em leads qualificados através da arquitetura de engajamento temporal (AET)
 
 ---
 
 <br><br>
-## **A Tese: Engenharia de Atenção**
+## **OS PILARES DA AET**
 Em vez de entregar toda a informação de imediato, esta arquitetura utiliza ciclos temporais para modular a experiência do usuário, baseando-se em quatro pilares estratégicos:
 
 > **AUTORIDADE:** Exposição técnica imediata para estabelecer autoridade. O visitante encontra projetos desenvolvidos, repositórios, vídeos e histórico de produção. Essa etapa responde à pergunta: Essa pessoa realmente consegue desenvolver um projeto? Sem essa validação, a conversão é enfraquecida.
@@ -45,3 +63,14 @@ Os modos interativos são isolados em um ambiente Sandbox. Essa modularidade per
 
 > Persistência e Captura (Firebase)
 Integração com Firebase Realtime DB para captura assíncrona de leads, armazenando não apenas o contato, mas o contexto da jornada do usuário.
+
+
+
+
+<br><br>
+## LICENSE
+
+This project is **Source-Available** under a [Custom License](LICENSE). 
+
+> **Warning:** The freedom to use the code does not extend to creative assets or the AET methodology. Narrative, visual identity, and engagement logic are protected by copyright. You are welcome to study the structure, but please respect the exclusivity of our strategic architecture! All intellectual property and code remain the property of W.F.FUKUTA and cannot be used for profit outside of the company's production environment.
+
