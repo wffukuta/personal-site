@@ -86,14 +86,14 @@
     }
 
     .about {
-      margin: 0 auto 24px auto;
-      max-width: 780px;
-      padding: 16px;
-      border: 2px solid var(--border-color);
-      border-radius: 0;
-      background-color: var(--bg-card);
-      box-shadow: 4px 4px 0 #000000;
-    }
+    max-width: 850px;
+    margin: 40px auto;
+    background: #fff;
+    border: 1px solid #000;
+    box-shadow: 12px 12px 0px #000; 
+    padding: 40px; 
+    text-align: left;
+}
 
     .about h2 {
       margin: 0 0 8px 0;
@@ -107,6 +107,42 @@
       font-size: 14px;
       line-height: 1.6;
     }
+
+    .about-title {
+    font-size: 24px;
+    font-weight: 900;
+    margin-bottom: 20px;
+    letter-spacing: -1px;
+    border-bottom: 2px solid #000;
+    display: inline-block;
+    padding-bottom: 5px;
+}
+
+.about-lead {
+    font-size: 18px;
+    line-height: 1.6;
+    color: #333;
+    margin-bottom: 30px;
+}
+
+.about-quote {
+    border-left: 3px solid #000;
+    padding-left: 20px;
+    margin: 30px 0;
+    font-style: italic;
+    font-size: 17px;
+    color: #000;
+    background: #f9f9f9;
+    padding: 20px;
+}
+
+.about-footer {
+    font-size: 14px;
+    color: #666;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+    line-height: 1.5;
+}
 
     main {
       position: relative;
@@ -673,22 +709,21 @@
 </header>
 
 <main>
- <section class="about" id="about-section" style="display: none;">
-    <div class="about-content">
-        <h3>Engenharia de Eficiência e Autonomia</h3>
-        <p>
-            Atuo como <strong>Desenvolvedor Full Stack</strong> focado em arquiteturas que equilibram robustez técnica e viabilidade financeira. Meu diferencial está na <strong>Engenharia de Eficiência</strong>: desenvolvo projetos de ponta a ponta com baixo custo de produção e, principalmente, <strong>custo reduzido de manutenção</strong>. Entrego soluções escaláveis que já nascem em produção, configuradas para operar com autonomia.
+<section class="about" id="about-section">
+    <div class="about-container">
+        <h2 class="about-title">Engenharia de Eficiência e Autonomia</h2>
+        
+        <p class="about-lead">
+            Atuo como <strong>Desenvolvedor Full Stack</strong> focado em arquiteturas que equilibram robustez técnica e viabilidade financeira. 
         </p>
 
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+        <div class="about-quote">
+            <p>"No mercado atual, o sucesso de um software não é medido apenas pelo código, mas pela sua sustentabilidade. Se você precisa pagar para mudar uma vírgula, você é refém, não dono."</p>
+        </div>
 
-        <blockquote style="border-left: 4px solid #000; padding-left: 15px; font-style: italic; margin: 20px 0;">
-            "No mercado atual, o sucesso de um software não é medido apenas pelo código, mas pela sua sustentabilidade a longo prazo. Projetos que deixam o detentor da ideia refém de manutenções constantes são falhas de planejamento. Minha abordagem elimina essa barreira: ao entregar um <strong>Painel Administrativo Próprio</strong>, transfiro o controle total para você. O código deve ser um facilitador de escala, não um centro de custos fixos."
-        </blockquote>
-
-        <p style="font-size: 13px; color: #666;">
-            <strong>VISÃO TÉCNICA:</strong> Trabalho para transformar complexidade em ativos digitais independentes. Se o sistema exige intervenção técnica para tarefas simples de gestão, a arquitetura falhou. Busco parceiros que valorizam inteligência de execução e liberdade de evolução.
-        </p>
+        <div class="about-footer">
+            <p><strong>VISÃO TÉCNICA:</strong> Transformo complexidade em ativos independentes com baixo custo de manutenção. Busco projetos que valorizam inteligência de execução.</p>
+        </div>
     </div>
 </section>
 
