@@ -663,6 +663,12 @@
       justify-content: center;
     }
 
+    /* Garante que o formulário e a escolha se respeitem */
+    .project-prompt-form[hidden],
+    .project-prompt-choice[hidden] {
+      display: none !important;
+    }
+
     .project-prompt-form input {
       width: min(520px, 100%);
       border: 1px solid #ffffff;
@@ -1542,109 +1548,82 @@ const chatForm = document.getElementById('chat-form');
 const chatInput = document.getElementById('chat-input');
 const chatSend = document.getElementById('chat-send');
 
-const projectPromptOverlay = document.getElementById('project-prompt-overlay');
-const projectPromptChoice = document.getElementById('project-prompt-choice');
-const projectPromptYes = document.getElementById('project-prompt-yes');
-const projectPromptNo = document.getElementById('project-prompt-no');
-const projectPromptForm = document.getElementById('project-prompt-form');
+const promptOverlay = document.getElementById('project-prompt-overlay');
+const btnTenho = document.getElementById('project-prompt-yes');
+const btnNao = document.getElementById('project-prompt-no');
+const choiceContainer = document.getElementById('project-prompt-choice');
+const projectForm = document.getElementById('project-prompt-form');
 const projectPromptInput = document.getElementById('project-prompt-input');
 const projectPromptStatus = document.getElementById('project-prompt-status');
+const btnModos = document.getElementById('modo-toggle');
 
 let promptVisible = false;
 
-function setProjectPromptStep(step) {
-  const showChoice = step === 'choice';
+function dispararPromptProjeto() {
+  if (promptVisible || !promptOverlay) return;
 
-  if (projectPromptChoice) {
-    projectPromptChoice.hidden = !showChoice;
-    projectPromptChoice.setAttribute('aria-hidden', String(!showChoice));
-  }
+  promptOverlay.classList.add('visible');
+  promptOverlay.setAttribute('aria-hidden', 'false');
 
-  if (projectPromptForm) {
-    projectPromptForm.hidden = showChoice;
-    projectPromptForm.setAttribute('aria-hidden', String(showChoice));
-  }
-}
-
-function showProjectPromptOverlay() {
-  if (promptVisible || !projectPromptOverlay) return;
-
-  hideModoToggleButton();
-
-  document.body.classList.remove('screen-rise');
-  document.body.classList.add('screen-fall');
-
-  setTimeout(() => {
-    projectPromptOverlay.classList.add('visible');
-    projectPromptOverlay.setAttribute('aria-hidden', 'false');
-
-    setProjectPromptStep('choice');
-    if (projectPromptStatus) projectPromptStatus.textContent = '';
-    if (projectPromptInput) projectPromptInput.value = '';
-
-    promptVisible = true;
-  }, 750);
-}
-
-function hideProjectPromptOverlay() {
-  if (!projectPromptOverlay) return;
-
-  projectPromptOverlay.classList.remove('visible');
-  projectPromptOverlay.setAttribute('aria-hidden', 'true');
-  document.body.classList.remove('screen-fall');
-  document.body.classList.add('screen-rise');
-  promptVisible = false;
-
-  setTimeout(() => {
-    document.body.classList.remove('screen-rise');
-  }, 900);
-}
-
-function hideModoToggleButton() {
-  if (!modoToggleButton) return;
-
-  disableModoAutoControl();
-  modoToggleButton.disabled = true;
-  modoToggleButton.style.pointerEvents = 'none';
-
-  modoToggleButton.style.visibility = 'hidden';
-  modoToggleButton.setAttribute('aria-hidden', 'true');
-}
-
-
-function finishProjectPromptFlow() {
-  projectPromptOverlay.classList.remove('visible');
-  projectPromptOverlay.setAttribute('aria-hidden', 'true');
-
-  document.body.classList.remove('screen-fall');
-  document.body.classList.add('screen-rise');
-  promptVisible = false;
-
-  setProjectPromptStep('choice');
+  if (projectPromptStatus) projectPromptStatus.textContent = '';
   if (projectPromptInput) projectPromptInput.value = '';
 
-  setTimeout(() => {
-    document.body.classList.remove('screen-rise');
-  }, 900);
+  promptVisible = true;
+
+  if (btnModos) {
+    btnModos.style.pointerEvents = 'none';
+    btnModos.style.opacity = '0.3';
+    disableModoAutoControl();
+  }
 }
 
-projectPromptYes?.addEventListener('click', () => {
-  setProjectPromptStep('form');
+function encerrarFluxoProjeto() {
+  if (!promptOverlay) return;
+
+  promptOverlay.classList.remove('visible');
+  promptOverlay.setAttribute('aria-hidden', 'true');
+
+  if (choiceContainer) {
+    choiceContainer.removeAttribute('hidden');
+    choiceContainer.setAttribute('aria-hidden', 'false');
+  }
+
+  if (projectForm) {
+    projectForm.setAttribute('hidden', 'true');
+    projectForm.setAttribute('aria-hidden', 'true');
+    projectForm.style.display = 'none';
+  }
+
+  promptVisible = false;
+
+  if (btnModos) {
+    btnModos.style.pointerEvents = 'auto';
+    btnModos.style.opacity = '1';
+  }
+}
+
+btnTenho?.addEventListener('click', () => {
+  if (choiceContainer) {
+    choiceContainer.setAttribute('hidden', 'true');
+    choiceContainer.setAttribute('aria-hidden', 'true');
+  }
+
+  if (projectForm) {
+    projectForm.removeAttribute('hidden');
+    projectForm.setAttribute('aria-hidden', 'false');
+    projectForm.style.display = 'flex';
+  }
+
   if (projectPromptStatus) projectPromptStatus.textContent = '';
   projectPromptInput?.focus();
 });
 
-projectPromptNo?.addEventListener('click', () => {
-  if (projectPromptStatus) projectPromptStatus.textContent = 'Tudo bem. Encerrando...';
-
-  setTimeout(() => {
-    finishProjectPromptFlow();
-    hideModoToggleButton();
-  }, 700);
+btnNao?.addEventListener('click', () => {
+  encerrarFluxoProjeto();
 });
 
 window.addEventListener('modo:all-sources-completed', () => {
-  showProjectPromptOverlay();
+  dispararPromptProjeto();
 });
 
 let messagesRef = null;
@@ -1744,7 +1723,7 @@ chatForm.addEventListener('submit', async event => {
   chatInput.focus();
 });
 
-projectPromptForm?.addEventListener('submit', async e => {
+projectForm?.addEventListener('submit', async e => {
   e.preventDefault();
 
   const resposta = projectPromptInput.value.trim();
@@ -1785,8 +1764,7 @@ projectPromptForm?.addEventListener('submit', async e => {
 
   setTimeout(() => {
     if (btn) btn.disabled = false;
-    finishProjectPromptFlow();
-    hideModoToggleButton();
+    encerrarFluxoProjeto();
   }, 1200);
 });
 </script>
