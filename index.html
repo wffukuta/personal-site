@@ -596,6 +596,30 @@
       line-height: 1.3;
     }
 
+    .project-prompt-choice {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .project-prompt-choice button {
+      border: 1px solid #ffffff;
+      background: #ffffff;
+      color: #000000;
+      font-weight: 700;
+      padding: 11px 18px;
+      cursor: pointer;
+      min-width: 110px;
+    }
+
+    .project-prompt-choice .project-prompt-yes {
+      background: #1f9d4d;
+      border-color: #1f9d4d;
+      color: #ffffff;
+    }
+
     .project-prompt-form {
       display: flex;
       gap: 10px;
@@ -689,7 +713,11 @@
 <section class="project-prompt-overlay" id="project-prompt-overlay" aria-hidden="true">
   <div class="project-prompt-card">
     <h2>VOCÊ TEM ALGUM PROJETO QUE GOSTARIA DE DESENVOLVER ?</h2>
-    <form class="project-prompt-form" id="project-prompt-form">
+    <div class="project-prompt-choice" id="project-prompt-choice">
+      <button type="button" class="project-prompt-yes" id="project-prompt-yes">TENHO</button>
+      <button type="button" id="project-prompt-no">NÃO</button>
+    </div>
+    <form class="project-prompt-form" id="project-prompt-form" hidden>
       <input id="project-prompt-input" type="text" maxlength="500" placeholder="Digite sua resposta" autocomplete="off" />
       <button type="submit" id="project-prompt-send">Enviar</button>
     </form>
@@ -1466,14 +1494,33 @@ const chatInput = document.getElementById('chat-input');
 const chatSend = document.getElementById('chat-send');
 
 const projectPromptOverlay = document.getElementById('project-prompt-overlay');
+const projectPromptChoice = document.getElementById('project-prompt-choice');
+const projectPromptYes = document.getElementById('project-prompt-yes');
+const projectPromptNo = document.getElementById('project-prompt-no');
 const projectPromptForm = document.getElementById('project-prompt-form');
 const projectPromptInput = document.getElementById('project-prompt-input');
 const projectPromptStatus = document.getElementById('project-prompt-status');
 
 let promptVisible = false;
 
+function setProjectPromptStep(step) {
+  const showChoice = step === 'choice';
+
+  if (projectPromptChoice) {
+    projectPromptChoice.hidden = !showChoice;
+    projectPromptChoice.setAttribute('aria-hidden', String(!showChoice));
+  }
+
+  if (projectPromptForm) {
+    projectPromptForm.hidden = showChoice;
+    projectPromptForm.setAttribute('aria-hidden', String(showChoice));
+  }
+}
+
 function showProjectPromptOverlay() {
   if (promptVisible || !projectPromptOverlay) return;
+
+  hideModoToggleButton();
 
   document.body.classList.remove('screen-rise');
   document.body.classList.add('screen-fall');
@@ -1481,7 +1528,11 @@ function showProjectPromptOverlay() {
   setTimeout(() => {
     projectPromptOverlay.classList.add('visible');
     projectPromptOverlay.setAttribute('aria-hidden', 'false');
-    projectPromptInput?.focus();
+
+    setProjectPromptStep('choice');
+    if (projectPromptStatus) projectPromptStatus.textContent = '';
+    if (projectPromptInput) projectPromptInput.value = '';
+
     promptVisible = true;
   }, 750);
 }
@@ -1504,10 +1555,44 @@ function hideModoToggleButton() {
   if (!modoToggleButton) return;
 
   disableModoAutoControl();
+  modoToggleButton.disabled = true;
+  modoToggleButton.style.pointerEvents = 'none';
 
   modoToggleButton.style.visibility = 'hidden';
   modoToggleButton.setAttribute('aria-hidden', 'true');
 }
+
+
+function finishProjectPromptFlow() {
+  projectPromptOverlay.classList.remove('visible');
+  projectPromptOverlay.setAttribute('aria-hidden', 'true');
+
+  document.body.classList.remove('screen-fall');
+  document.body.classList.add('screen-rise');
+  promptVisible = false;
+
+  setProjectPromptStep('choice');
+  if (projectPromptInput) projectPromptInput.value = '';
+
+  setTimeout(() => {
+    document.body.classList.remove('screen-rise');
+  }, 900);
+}
+
+projectPromptYes?.addEventListener('click', () => {
+  setProjectPromptStep('form');
+  if (projectPromptStatus) projectPromptStatus.textContent = '';
+  projectPromptInput?.focus();
+});
+
+projectPromptNo?.addEventListener('click', () => {
+  if (projectPromptStatus) projectPromptStatus.textContent = 'Tudo bem. Encerrando...';
+
+  setTimeout(() => {
+    finishProjectPromptFlow();
+    hideModoToggleButton();
+  }, 700);
+});
 
 window.addEventListener('modo:all-sources-completed', () => {
   showProjectPromptOverlay();
@@ -1616,48 +1701,42 @@ projectPromptForm?.addEventListener('submit', async e => {
   const resposta = projectPromptInput.value.trim();
   if (!resposta) return;
 
-  // 1. Feedback visual e trava o botão
   projectPromptStatus.textContent = 'Salvando...';
   const btn = e.target.querySelector('button');
   if (btn) btn.disabled = true;
 
-  try {
-    // 2. Tenta pegar o UID do usuário logado (Firebase Auth)
-    // Se não houver usuário, salvamos como 'anonimo'
-    const user = auth.currentUser;
-    const uid = user ? user.uid : `anonimo_${Date.now()}`;
+  let user = auth.currentUser;
+  if (!user) {
+    projectPromptStatus.textContent = 'Faça login com Google para enviar.';
 
-    // 3. Salva no Realtime Database no nó /projeto/UID/
-    // Usamos .push() para que ele possa enviar vários projetos sem sobrescrever
-    await push(ref(database, `projeto/${uid}`), {
+    try {
+      const loginResult = await signInWithPopup(auth, provider);
+      user = loginResult.user;
+      projectPromptStatus.textContent = 'Login concluído. Enviando...';
+    } catch (error) {
+      console.error('Falha no login para envio do projeto:', error);
+      projectPromptStatus.textContent = 'Não foi possível fazer login agora.';
+      if (btn) btn.disabled = false;
+      return;
+    }
+  }
+
+  try {
+    await push(ref(database, `projeto/${user.uid}`), {
       descricao: resposta,
       timestamp: serverTimestamp(),
-      email: user ? user.email : 'não autenticado'
+      email: user.email || 'sem-email'
     });
 
     projectPromptStatus.textContent = 'Enviado!';
   } catch (error) {
-    // 4. Se der erro (ex: falta de permissão), logamos mas não travamos o usuário
     console.error('Erro Firebase:', error);
     projectPromptStatus.textContent = 'Erro de rede, mas vamos prosseguir...';
   }
 
-  // 5. O SEGREDO DO FLUXO: Executa de qualquer forma após 1 segundo
   setTimeout(() => {
-    // Fecha o modal do projeto
-    projectPromptOverlay.classList.remove('visible');
-    projectPromptOverlay.setAttribute('aria-hidden', 'true');
-
-    // Inicia o efeito de "subida" da tela (retorno ao normal)
-    document.body.classList.remove('screen-fall');
-    document.body.classList.add('screen-rise');
-    promptVisible = false;
-
-    // Reseta o formulário
-    projectPromptInput.value = '';
     if (btn) btn.disabled = false;
-
-    // Final do fluxo: deixa o botão de modos invisível
+    finishProjectPromptFlow();
     hideModoToggleButton();
   }, 1200);
 });
