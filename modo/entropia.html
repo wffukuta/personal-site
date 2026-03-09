@@ -1,0 +1,85 @@
+<script>
+  <style id="cyberpunk-theme-overrides">
+    :root {
+        --bg-body: #050505;
+        --bg-card: #000000;
+        --border-color: #00ff41; /* Verde Matrix/Terminal */
+        --text-main: #00ff41;
+        --text-muted: #003300;
+        --link-color: #00ff41;
+    }
+
+    body {
+        background-image: linear-gradient(rgba(0, 255, 65, 0.05) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(0, 255, 65, 0.05) 1px, transparent 1px);
+        background-size: 30px 30px;
+    }
+
+    .card {
+        box-shadow: 4px 4px 0px #003300 !important;
+        border: 1px solid #00ff41 !important;
+        text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+    }
+
+    .project-link {
+        background: #00ff41 !important;
+        color: #000 !important;
+    }
+
+    /* Animação de varredura de linha (scanline) */
+    body::before {
+        content: " ";
+        display: block;
+        position: fixed;
+        top: 0; left: 0; bottom: 0; right: 0;
+        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+                    linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+        z-index: 9999;
+        pointer-events: none;
+        background-size: 100% 4px, 3px 100%;
+    }
+</style>
+
+<script>
+(function() {
+    console.log("🧬 Arquitetura de Engajamento Temporal: Modo Entropia Ativado.");
+
+    const cards = document.querySelectorAll('.card');
+    let intensidade = 0;
+
+    // Lógica Temporal: Aumenta a "instabilidade" visual conforme o tempo passa
+    const loopEntropico = setInterval(() => {
+        intensidade += 0.1;
+        
+        cards.forEach(card => {
+            // Cria um tremor sutil nos cards baseado na intensidade acumulada
+            const x = (Math.random() - 0.5) * intensidade;
+            const y = (Math.random() - 0.5) * intensidade;
+            card.style.transform = `translate(${x}px, ${y}px)`;
+        });
+
+        if (intensidade > 5) intensidade = 0; // Reset para não quebrar a UX
+    }, 100);
+
+    // Adiciona um efeito de "glitch" aleatório nos textos
+    const textElements = document.querySelectorAll('h1, h2, p');
+    const glitchInterval = setInterval(() => {
+        const el = textElements[Math.floor(Math.random() * textElements.length)];
+        const originalText = el.innerText;
+        
+        if (Math.random() > 0.95) {
+            el.innerText = "SYSTEM_FAILURE";
+            setTimeout(() => el.innerText = originalText, 150);
+        }
+    }, 2000);
+
+    // IMPORTANTE: Limpeza para quando a arquitetura trocar de modo
+    // O index.html já limpa os scripts injetados, mas intervalos precisam ser parados manualmente
+    window.addEventListener('modo:all-sources-completed', () => {
+        clearInterval(loopEntropico);
+        clearInterval(glitchInterval);
+    }, { once: true });
+
+})();
+</script>
+
