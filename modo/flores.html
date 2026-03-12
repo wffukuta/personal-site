@@ -5,15 +5,10 @@
     const h1 = header.querySelector('h1');
     if (!header || !heroContent || !h1) return;
 
-    // 1. Configuração de Camadas Simples
     header.style.position = 'relative';
-    
-    // Texto na frente de tudo
     heroContent.style.position = 'relative';
     heroContent.style.zIndex = '10';
-    h1.style.textShadow = 'none'; // Garante que não haja sombra
 
-    // Canvas no meio (atrás do texto, na frente do fundo)
     const canvas = document.createElement('canvas');
     Object.assign(canvas.style, {
         position: 'absolute',
@@ -28,7 +23,6 @@
 
     const ctx = canvas.getContext('2d', { alpha: true });
     let flowers = [];
-    const colors = ['#58a6ff', '#7b5cff', '#20c997'];
     const DURATION_MS = 20000; 
     let startTime = Date.now();
 
@@ -39,48 +33,63 @@
 
     class Flower {
         constructor() {
-            // Garante espalhamento por toda a largura do canvas
             this.x = Math.random() * canvas.width;
-            this.maxH = Math.random() * 40 + 30;
+            
+            // Lógica de Altura Dinâmica:
+            // Calcula a distância do centro (0 a 1)
+            const centerX = canvas.width / 2;
+            const distFromCenter = Math.abs(this.x - centerX) / centerX;
+            
+            if (distFromCenter < 0.25) {
+                // No centro: Flores anãs (para não cobrir o nome)
+                this.maxH = Math.random() * 15 + 10; 
+            } else {
+                // Nas bordas: Flores crescem progressivamente mais
+                this.maxH = (distFromCenter * 60) + (Math.random() * 20);
+            }
+
             this.delay = Math.random() * (DURATION_MS * 0.7);
-            this.color = colors[Math.floor(Math.random() * colors.length)];
+            this.color = '#000000'; // Cor preta solicitada
             this.petals = Math.floor(Math.random() * 2) + 5;
-            this.angle = (Math.random() - 0.5) * 0.5;
+            this.angle = (Math.random() - 0.5) * 0.4;
         }
 
         draw() {
             const elapsed = Date.now() - (startTime + this.delay);
             if (elapsed < 0) return;
 
-            const p = Math.min(1, elapsed / 4000); // 4 segundos para cada flor crescer
+            const p = Math.min(1, elapsed / 4000); 
             const h = this.maxH * p;
 
             ctx.save();
             ctx.translate(this.x, canvas.height);
             
-            // Caule
+            // Caule Preto
             ctx.beginPath();
-            ctx.strokeStyle = '#20c997';
-            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 1.5;
             ctx.moveTo(0, 0);
             ctx.lineTo(h * this.angle, -h);
             ctx.stroke();
 
             // Flor
             if (p > 0.3) {
-                const s = (p - 0.3) * 12;
+                const s = (p - 0.3) * 10;
                 ctx.translate(h * this.angle, -h);
                 ctx.fillStyle = this.color;
+                
+                // Pétalas
                 for (let i = 0; i < this.petals; i++) {
                     ctx.rotate((Math.PI * 2) / this.petals);
                     ctx.beginPath();
                     ctx.arc(s, 0, s/2, 0, Math.PI * 2);
                     ctx.fill();
                 }
-                // Miolo
+                
+                // Miolo (Branco para destacar no preto)
                 ctx.beginPath();
-                ctx.fillStyle = '#fff';
-                ctx.arc(0, 0, s/3, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.arc(0, 0, s/4, 0, Math.PI * 2);
                 ctx.fill();
             }
             ctx.restore();
@@ -90,8 +99,8 @@
     function init() {
         setupCanvas();
         flowers = [];
-        // Criamos 50 flores espalhadas
-        for (let i = 0; i < 50; i++) {
+        // Aumentei para 80 flores para um visual mais denso nas bordas
+        for (let i = 0; i < 80; i++) {
             flowers.push(new Flower());
         }
     }
@@ -102,8 +111,11 @@
         requestAnimationFrame(animate);
     }
 
-    // Aguarda um momento para o navegador calcular o tamanho real do header
-    window.addEventListener('resize', setupCanvas);
+    window.addEventListener('resize', () => {
+        setupCanvas();
+        init(); // Reinicia para recalcular posições no resize
+    });
+
     setTimeout(() => {
         init();
         animate();
