@@ -1,0 +1,413 @@
+<script>
+(function() {
+    // 0. Preparação e Remoção do Prompt Anterior
+    const existingOverlay = document.getElementById('project-prompt-overlay');
+    if (!existingOverlay) {
+        console.error('Erro: O overlay de prompt (#project-prompt-overlay) não foi encontrado.');
+        return;
+    }
+    // Remove o conteúdo do prompt anterior para limpar o palco
+    existingOverlay.innerHTML = '';
+    existingOverlay.style.background = 'rgba(0, 0, 0, 0.95)'; // Garante fundo preto sólido
+    existingOverlay.style.zIndex = '1600'; // Garante que a animação fique sobre tudo
+
+    // 1. Injeção de CSS para a Animação e Estética Brutalista
+    const css = `
+        /* Estilização da Bola, Mancha e Conteúdo Revelado */
+        #aet-animation-stage {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none; /* Impede interferência até a revelação */
+        }
+        .aet-ball {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #000;
+            border: 2px solid #fff; /* Sutil borda branca para contraste no fundo preto */
+            box-shadow: 6px 6px 0 rgba(255, 255, 255, 0.1);
+            transform: translate(-50%, -50%); /* Centraliza em seu ponto x, y */
+        }
+        .aet-ink-splatter {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            fill: #000;
+            opacity: 0;
+            transform: scale(0);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .aet-revelation-content {
+            position: absolute;
+            width: min(700px, 90vw);
+            text-align: center;
+            opacity: 0;
+            transform: scale(0.9);
+            transition: opacity 0.4s ease 0.3s, transform 0.4s ease 0.3s;
+            pointer-events: auto; /* Reativa para o texto e botão */
+            color: #fff; /* Texto branco solicitado */
+            z-index: 10;
+        }
+        .aet-revelation-content h2 {
+            margin: 0 0 16px;
+            font-size: clamp(18px, 3.5vw, 32px);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #fff;
+        }
+        .aet-revelation-content p {
+            margin: 0 0 24px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+            font-family: 'Crimson Pro', serif;
+        }
+        .aet-revelation-content blockquote {
+            margin: 0 0 20px;
+            border-left: 4px solid #fff;
+            padding-left: 15px;
+            font-style: italic;
+            background: rgba(255, 255, 255, 0.05);
+            font-size: 13px;
+            color: #fff;
+        }
+        .aet-ok-button {
+            border: 2px solid #fff;
+            background: #000;
+            color: #fff;
+            font-weight: 900;
+            padding: 12px 24px;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 6px 6px 0 #fff;
+            text-transform: uppercase;
+            transition: filter 0.2s, transform 0.2s;
+        }
+        .aet-ok-button:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        /* Estilização para o Conteúdo de Custo Zero nos Cards (brutalismo em P&B) */
+        .aet-cost-summary {
+            margin-top: 20px;
+            border: 2px solid #000;
+            background: #fff;
+            padding: 16px;
+            box-shadow: 6px 6px 0 #000;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        .aet-cost-summary.added {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .aet-cost-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            color: #000;
+        }
+        .aet-cost-header {
+            background: rgba(0, 0, 0, 0.05);
+            font-weight: 900;
+            text-transform: uppercase;
+            color: #000;
+            border-bottom: 2px solid #000;
+        }
+        .aet-cost-header td {
+            padding: 8px;
+            text-align: center;
+        }
+        .aet-cost-row {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        .aet-cost-row td {
+            padding: 8px;
+            text-align: center;
+        }
+        .aet-cost-label {
+            display: inline-block;
+            margin-right: 5px;
+            color: rgba(0, 0, 0, 0.6);
+        }
+    `;
+    const styleTag = document.createElement('style');
+    styleTag.textContent = css;
+    document.head.appendChild(styleTag);
+
+    // 2. Criação dos Elementos DOM da Animação e Revelação
+    const stage = document.createElement('div');
+    stage.id = 'aet-animation-stage';
+    existingOverlay.appendChild(stage);
+
+    const ball = document.createElement('div');
+    ball.className = 'aet-ball';
+    stage.appendChild(ball);
+
+    // SVG de Mancha de Tinta (escondido inicialmente)
+    stage.innerHTML += `
+        <svg class="aet-ink-splatter" viewBox="0 0 1000 1000" id="splatter">
+            <path d="M500,0 C223.858,0,0,223.858,0,500 C0,776.142,223.858,1000,500,1000 C776.142,1000,1000,776.142,1000,500 C1000,223.858,776.142,0,500,0 L500,0 L500,0 Z M529.673,786.19 C529.673,812.302,512.446,831.396,483.673,831.396 C454.9,831.396,437.673,812.302,437.673,786.19 L437.673,786.19 C437.673,760.078,454.9,740.984,483.673,740.984 C512.446,740.984,529.673,760.078,529.673,786.19 Z M483.673,695.19 L437.673,695.19 C437.673,695.19,425.213,227.066,425.213,212.871 C425.213,198.677,431.141,185.343,441.972,174.512 C452.802,163.682,466.136,157.753,480.33,157.753 L487.016,157.753 C501.211,157.753,514.544,163.682,525.375,174.512 C536.205,185.343,542.134,198.677,542.134,212.871 C542.134,227.066,529.673,695.19,529.673,695.19 L483.673,695.19 L483.673,695.19 Z L529.673,786.19" fill="#000"></path>
+        </svg>
+    `;
+    const splatter = document.getElementById('splatter');
+
+    const revelationContent = document.createElement('div');
+    revelationContent.className = 'aet-revelation-content';
+    revelationContent.innerHTML = `
+        <h2>Engenharia de Viabilidade e Autonomia</h2>
+        <p>No mercado atual, o sucesso de um software não é medido apenas pelo código, mas pela sua sustentabilidade a longo prazo.</p>
+        <blockquote>
+            Garantimos <strong>custo zero</strong> de desenvolvimento e manutenção em muitos aspectos essenciais, baseando-nos no princípio de autonomia técnica e viabilidade financeira. O código deve ser um facilitador de escala, não um centro de custos fixos.
+        </blockquote>
+        <button class="aet-ok-button" id="aet-ok">OK</button>
+    `;
+    stage.appendChild(revelationContent);
+    const okButton = document.getElementById('aet-ok');
+
+    // 3. Classe Ball para Física de Quique e Movimento
+    class Ball {
+        constructor(x, y, radius, color, edgeColor) {
+            this.x = x;
+            this.y = y;
+            this.vx = (Math.random() - 0.5) * 5; // Velocidade horizontal aleatória
+            this.vy = -5; // Velocidade vertical inicial para baixo
+            this.gravity = 0.4;
+            this.friction = 0.98;
+            this.bounciness = 0.8;
+            this.radius = radius;
+            this.color = color;
+            this.edgeColor = edgeColor;
+            this.stopped = false;
+        }
+
+        update() {
+            if (this.stopped) return;
+
+            // Aplica gravidade e fricção
+            this.vy += this.gravity;
+            this.vx *= this.friction;
+            this.vy *= this.friction;
+
+            // Atualiza posição
+            this.x += this.vx;
+            this.y += this.vy;
+
+            // Colisões com as "paredes" laterais
+            const overlayWidth = existingOverlay.offsetWidth;
+            if (this.x - this.radius < 0) {
+                this.x = this.radius;
+                this.vx *= -this.bounciness;
+            } else if (this.x + this.radius > overlayWidth) {
+                this.x = overlayWidth - this.radius;
+                this.vx *= -this.bounciness;
+            }
+
+            // Colisão com o "chão" (inferior do overlay)
+            const overlayHeight = existingOverlay.offsetHeight;
+            if (this.y + this.radius > overlayHeight) {
+                this.y = overlayHeight - this.radius;
+                this.vy *= -this.bounciness;
+
+                // Reduz velocidade vertical até parar
+                if (Math.abs(this.vy) < 0.5) {
+                    this.vy = 0;
+                    this.stopped = true;
+                    // Inicia a explosão
+                    triggerInkExplosion();
+                }
+            }
+
+            // Atualiza o DOM
+            ball.style.left = `${this.x}px`;
+            ball.style.top = `${this.y}px`;
+        }
+    }
+
+    // Inicializa a Bola (Canto superior esquerdo)
+    const overlayWidth = existingOverlay.offsetWidth;
+    const overlayHeight = existingOverlay.offsetHeight;
+    const startX = 0;
+    const startY = 0;
+    const myBall = new Ball(startX, startY, 20, '#000', '#fff');
+
+    // 4. Módulo de Animação e Renderização
+    let animationId;
+    function animate() {
+        myBall.update();
+        if (!myBall.stopped) {
+            animationId = requestAnimationFrame(animate);
+        }
+    }
+
+    // Inicia o fluxo de animação
+    requestAnimationFrame(animate);
+
+    // 5. Módulo de Explosão de Tinta e Revelação de Texto
+    function triggerInkExplosion() {
+        // Para a animação de quique
+        cancelAnimationFrame(animationId);
+
+        // Animação da bola se deformando e se expandindo para criar a mancha
+        ball.style.transition = 'width 0.5s ease, height 0.5s ease, transform 0.5s ease, opacity 0.3s ease 0.4s';
+        ball.style.width = '500px'; // Expande para o tamanho da mancha
+        ball.style.height = '500px';
+        ball.style.transform = 'translate(-50%, -50%)'; // Mantém o centro
+
+        // Revela a mancha de tinta preta
+        setTimeout(() => {
+            splatter.style.opacity = '1';
+            splatter.style.transform = 'scale(1)';
+        }, 100);
+
+        // Remove a bola e revela o texto sobre a mancha
+        setTimeout(() => {
+            ball.remove();
+            revelationContent.style.opacity = '1';
+            revelationContent.style.transform = 'scale(1)';
+        }, 500);
+    }
+
+    // 6. Ação no Botão "OK" (Recolhimento e Voo de Partículas)
+    okButton.addEventListener('click', () => {
+        // Animação de recolhimento e desconstrução da mancha
+        revelationContent.style.opacity = '0';
+        revelationContent.style.transform = 'scale(0.9)';
+        
+        setTimeout(() => {
+            splatter.style.opacity = '0';
+            splatter.style.transform = 'scale(0) rotate(180deg)'; // Recolhe e gira
+        }, 200);
+
+        // Simulação de partículas de tinta "voando" para os cards
+        const cycleBalloon = existingOverlay.querySelector('.cycle-balloon');
+        // Usamos partículas pretas e cinzas para voar sobre o fundo preto
+        const particles = createInkParticles(stage, cycleBalloon, 40, '#fff', '#aaa');
+        
+        // Remove o overlay e as partículas após o "voo"
+        setTimeout(() => {
+            existingOverlay.remove();
+            styleTag.remove();
+            
+            // Adiciona as novas informações aos cards de acordo com image_4.png
+            addCostSummariesToCards();
+        }, 2000); // 2 segundos para partículas "voarem"
+    });
+
+    // 7. Função para Criar Partículas de Tinta que "Voam"
+    function createInkParticles(container, targetElement, count, color1, color2) {
+        if (!container || !targetElement) return;
+
+        const containerRect = container.getBoundingClientRect();
+        const targetRect = targetElement.getBoundingClientRect();
+
+        const centerX = containerRect.width / 2;
+        const centerY = containerRect.height / 2;
+
+        const particles = [];
+        for (let i = 0; i < count; i++) {
+            const particle = document.createElement('div');
+            // Tamanho brutalista e aleatório (4px a 8px)
+            const size = Math.random() * 4 + 4;
+            particle.style.cssText = `
+                position: absolute;
+                width: ${size}px;
+                height: ${size}px;
+                background: ${Math.random() > 0.5 ? color1 : color2};
+                border-radius: 50%;
+                box-shadow: 4px 4px 0 rgba(255, 255, 255, 0.1);
+                top: ${centerY}px;
+                left: ${centerX}px;
+                transform: translate(-50%, -50%);
+                transition: all 1s ease;
+                z-index: 2000;
+            `;
+            container.appendChild(particle);
+
+            // Animação para "esparramar" as partículas
+            setTimeout(() => {
+                const spreadX = (Math.random() - 0.5) * 400;
+                const spreadY = (Math.random() - 0.5) * 400;
+                particle.style.top = `${centerY + spreadY}px`;
+                particle.style.left = `${centerX + spreadX}px`;
+            }, i * 10);
+
+            // Animação para "voar" para o alvo
+            setTimeout(() => {
+                const targetX = targetRect.left + targetRect.width / 2;
+                const targetY = targetRect.top + targetRect.height / 2;
+                particle.style.transitionDuration = '1.5s';
+                particle.style.transitionDelay = `${i * 10}ms`;
+                particle.style.top = `${targetY}px`;
+                particle.style.left = `${targetX}px`;
+                particle.style.width = '2px'; // Diminui para "pousar"
+                particle.style.height = '2px';
+                particle.style.opacity = '0'; // Desaparece ao pousar
+            }, 1000 + i * 10);
+
+            particles.push(particle);
+        }
+        return particles;
+    }
+
+    // 8. Função para Adicionar Resumos de Custos aos Cards (Baseado em image_4.png)
+    function addCostSummariesToCards() {
+        // Seleciona os cards reais (adaptar o seletor se necessário, ex: `.grid .card`)
+        const cards = document.querySelectorAll('.grid .card');
+        if (!cards.length) {
+            console.warn('Avisovos: Nenhum card foi encontrado para atualizar. Verifique os seletores.');
+            return;
+        }
+
+        // HTML para o resumo de custos (baseado no formato e valores da image_4.png)
+        const costHtml = `
+            <div class="aet-cost-summary">
+                <table class="aet-cost-table">
+                    <tr class="aet-cost-header">
+                        <td colspan="3">Resumo de Custo Zero (Mês 01)</td>
+                    </tr>
+                    <tr class="aet-cost-row">
+                        <td><span class="aet-cost-label">Criação:</span> R$0,00</td>
+                        <td><span class="aet-cost-label">Publicação:</span> R$125,00</td>
+                        <td><span class="aet-cost-label">Manutenção:</span> R$0,00</td>
+                    </tr>
+                    <tr class="aet-cost-row">
+                        <td><span class="aet-cost-label">Hospedagem:</span> R$0,00</td>
+                        <td><span class="aet-cost-label">Domínio:</span> R$0,00</td>
+                        <td><span class="aet-cost-label">Suporte:</span> R$0,00</td>
+                    </tr>
+                </table>
+            </div>
+        `;
+
+        // Adiciona o resumo de custos a cada card com efeito de animação
+        cards.forEach((card, index) => {
+            // Insere o HTML antes do link do projeto
+            const actions = card.querySelector('.actions');
+            if (actions) {
+                actions.insertAdjacentHTML('beforebegin', costHtml);
+            } else {
+                card.insertAdjacentHTML('beforeend', costHtml);
+            }
+
+            // Animação fade-in com delay para cada card
+            setTimeout(() => {
+                const summary = card.querySelector('.aet-cost-summary');
+                if (summary) {
+                    summary.classList.add('added');
+                }
+            }, index * 200 + 100); // 200ms de delay entre cada card
+        });
+    }
+
+})();
+</script>
