@@ -1588,7 +1588,9 @@ function dispararPromptProjeto() {
 
   if (btnModos) {
     btnModos.style.pointerEvents = 'none';
-    btnModos.style.opacity = '0.3';
+    btnModos.style.opacity = '0';
+    btnModos.setAttribute('aria-hidden', 'true');
+    btnModos.setAttribute('hidden', 'true');
     disableModoAutoControl();
   }
 }
