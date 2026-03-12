@@ -1,35 +1,38 @@
 <script>
 (function() {
-    // 1. Definição dos Dados - Foco em Autonomia do Cliente
+    // 0. Verificação de Existência (Evita duplicados)
+    if (document.getElementById('aet-cycle')) return;
+
+    // 1. Dados - Foco em Autonomia
     const etapas = [
         {
             icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L21 2"/></svg>`,
             title: "ENTREGO A CHAVE NA SUA MÃO",
-            desc: "Eu cuido de tudo: do domínio ao servidor. Você recebe o projeto pronto para faturar, sem precisar entender de infraestrutura ou configuração técnica."
+            desc: "Eu cuido de tudo: do domínio ao servidor. Você recebe o projeto pronto para faturar."
         },
         {
             icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M3 9h18"/></svg>`,
             title: "GESTÃO INDEPENDENTE",
-            desc: "Desenvolvo um Painel Administrativo sob medida. Você altera textos, imagens e conteúdos sozinho, com total liberdade e sem custos extras de manutenção."
+            desc: "Painel Administrativo sob medida. Altere conteúdos sozinho, sem custos extras de manutenção."
         },
         {
             icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 006.5 22H20M4 19.5V3a1 1 0 011-1h15v18H6.5a1 1 0 01-1-1z"/></svg>`,
             title: "DOCUMENTAÇÃO VIVA",
-            desc: "Nada de 'caixa preta'. Entrego um manual funcional detalhando como o sistema funciona e como ele pode evoluir. Transparência total sobre seu ativo digital."
+            desc: "Nada de 'caixa preta'. Manual funcional detalhando como o sistema funciona e evolui."
         },
         {
             icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`,
             title: "ESCALA E EVOLUÇÃO",
-            desc: "O código é seu e é escalável. Se o projeto crescer 10x, a base está pronta. Eu não crio apenas um site, eu construo o alicerce do seu negócio."
+            desc: "O código é seu e é escalável. Eu construo o alicerce do seu negócio, não apenas um site."
         }
     ];
 
-    // 2. Injeção de CSS (Respeitando a AET)
+    // 2. CSS Persistente e Minimalista (P&B)
     const css = `
         #aet-cycle {
             position: fixed;
-            top: 25px;
-            right: 25px;
+            top: 30px;
+            right: 30px;
             z-index: 9999;
             display: flex;
             flex-direction: column;
@@ -38,7 +41,6 @@
         }
         .cycle-item {
             position: relative;
-            margin-bottom: 0;
             opacity: 0;
             transform: translateX(30px);
             transition: all 0.7s cubic-bezier(0.23, 1, 0.32, 1);
@@ -49,8 +51,8 @@
             transform: translateX(0);
         }
         .cycle-circle {
-            width: 48px;
-            height: 48px;
+            width: 44px;
+            height: 44px;
             border: 2px solid #000;
             border-radius: 50%;
             background: #fff;
@@ -58,61 +60,56 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 6px 6px 0px #000;
+            box-shadow: 4px 4px 0px #000;
             padding: 10px;
             color: #000;
             transition: all 0.2s ease;
         }
         .cycle-circle:hover { 
             transform: translate(-2px, -2px);
-            box-shadow: 8px 8px 0px #000;
-            background: #f0f0f0;
+            box-shadow: 6px 6px 0px #000;
+            background: #000;
+            color: #fff;
         }
         .cycle-line {
-            width: 3px;
+            width: 2px;
             background: #000;
             height: 0;
-            transition: height 1s ease;
+            transition: height 0.8s ease;
         }
-        /* Balão de Informação */
         .cycle-balloon {
             position: absolute;
-            right: 75px;
+            right: 65px;
             top: 0;
-            width: 280px;
+            width: 250px;
             background: #fff;
             color: #000;
             padding: 15px;
             border: 2px solid #000;
-            box-shadow: 8px 8px 0px #000;
+            box-shadow: 6px 6px 0px #000;
             opacity: 0;
             visibility: hidden;
             transition: all 0.3s ease;
-            text-align: left;
         }
         .cycle-item:hover .cycle-balloon {
             opacity: 1;
             visibility: visible;
-            right: 65px;
+            right: 55px;
         }
         .cycle-balloon h4 {
-            margin: 0 0 8px 0;
-            font-size: 14px;
+            margin: 0 0 5px 0;
+            font-size: 12px;
             font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #000;
         }
         .cycle-balloon p {
             margin: 0;
             font-size: 13px;
-            line-height: 1.5;
-            font-family: 'Crimson Pro', serif;
+            line-height: 1.4;
         }
     `;
 
     const styleTag = document.createElement('style');
-    styleTag.id = 'aet-cycle-theme';
     styleTag.textContent = css;
     document.head.appendChild(styleTag);
 
@@ -131,7 +128,7 @@
             const line = document.createElement('div');
             line.className = 'cycle-line';
             container.appendChild(line);
-            setTimeout(() => line.style.height = '35px', 100);
+            setTimeout(() => line.style.height = '25px', 100);
         }
 
         const item = document.createElement('div');
@@ -149,17 +146,10 @@
 
         currentIdx++;
         if (currentIdx < etapas.length) {
-            setTimeout(renderNext, 10000); // 10 segundos entre cada pilar
+            setTimeout(renderNext, 8000); // Reduzi para 8s para ser levemente mais dinâmico
         }
     }
 
     renderNext();
-
-    // Limpeza ao trocar de modo
-    window.addEventListener('modo:all-sources-completed', () => {
-        styleTag.remove();
-        container.remove();
-    }, { once: true });
-
 })();
 </script>
