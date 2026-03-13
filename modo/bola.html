@@ -1,6 +1,6 @@
 <script>
 (function() {
-    // 1. CONFIGURAÇÃO E CSS INJETADO (Fundo transparente para ver o site)
+    // 1. CONFIGURAÇÃO E CSS (Ajuste para evitar traços fantasmas)
     const styleId = 'aet-ball-animation-styles';
     let styleElement = document.getElementById(styleId);
     if (!styleElement) {
@@ -13,9 +13,9 @@
         #project-prompt-overlay { 
             display: flex !important; 
             opacity: 1 !important; 
-            background: transparent !important; /* Removido o preto sólido */
+            background: transparent !important; 
             overflow: hidden; 
-            pointer-events: none; /* Permite interagir com o fundo se necessário */
+            pointer-events: none; 
         }
         .project-prompt-card { display: none !important; }
 
@@ -39,29 +39,39 @@
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: min(500px, 80vw); text-align: center; color: #fff; opacity: 0; 
             transition: opacity 0.5s ease; z-index: 15; pointer-events: none;
-            background: #000; padding: 20px; border: 2px solid #fff; /* Fundo apenas na mensagem */
+            background: #000; padding: 20px; border: 2px solid #fff;
         }
         .aet-message-box.active { opacity: 1; pointer-events: auto; }
-        .aet-message-box h2 { font-size: 24px; text-transform: uppercase; margin: 0 0 15px; border-bottom: 2px solid #fff; display: inline-block; padding-bottom: 5px; }
-        .aet-message-box p { font-size: 16px; line-height: 1.5; margin-bottom: 20px; font-family: 'Crimson Pro', serif; }
         
         .aet-btn-ok {
             background: #fff; color: #000; border: none; padding: 10px 40px; 
             font-weight: 900; cursor: pointer; text-transform: uppercase;
             box-shadow: 5px 5px 0 #333; transition: all 0.2s;
         }
-        .aet-btn-ok:hover { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 #333; }
 
-        .aet-particle {
-            position: fixed; width: 6px; height: 6px; background: #000; border: 1px solid #fff;
-            z-index: 2000; pointer-events: none; transition: all 1.2s cubic-bezier(0.5, 0, 0.5, 1);
-        }
-
+        /* AJUSTE AQUI: Impede que os traços apareçam antes da hora */
         .column-j-data {
-            margin-top: 15px; border-top: 2px dashed #000; padding-top: 10px;
-            font-size: 12px; background: #f9f9f9; padding: 8px; animation: slideUp 0.5s ease forwards;
+            margin-top: 15px; 
+            border-top: 2px dashed #000; 
+            padding-top: 10px;
+            font-size: 12px; 
+            background: #f9f9f9; 
+            padding: 8px; 
+            overflow: hidden;
+            visibility: hidden; /* Fica oculto até a animação */
+            height: 0; /* Começa sem altura para não empurrar os botões */
+            opacity: 0;
         }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Classe disparada quando a partícula atinge o card */
+        .column-j-data.reveal {
+            visibility: visible;
+            height: auto;
+            opacity: 1;
+            animation: slideUp 0.5s ease forwards;
+        }
+
+        @keyframes slideUp { from { transform: translateY(10px); } to { transform: translateY(0); } }
         .j-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
         .j-val { font-weight: 700; color: #000; }
     `;
@@ -81,80 +91,59 @@
     const splatter = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     splatter.setAttribute("viewBox", "0 0 100 100");
     splatter.setAttribute("class", "aet-splatter-svg");
-    splatter.innerHTML = `<path d="M50,10 Q60,5 70,15 T85,40 Q95,50 85,65 T65,85 Q50,95 35,85 T15,65 Q5,50 15,35 T35,10 Z" />
-                          <circle cx="20" cy="20" r="5" /><circle cx="80" cy="30" r="3" /><circle cx="40" cy="85" r="4" />`;
+    splatter.innerHTML = `<path d="M50,10 Q60,5 70,15 T85,40 Q95,50 85,65 T65,85 Q50,95 35,85 T15,65 Q5,50 15,35 T35,10 Z" />`;
     overlay.appendChild(splatter);
 
     const msgBox = document.createElement('div');
     msgBox.className = 'aet-message-box';
     msgBox.innerHTML = `
-        <h2>Custo Zero Real</h2>
-        <p>Minha arquitetura é projetada para eliminar mensalidades. Desenvolvimento eficiente e manutenção inexistente através de sistemas serverless e autônomos.</p>
+        <h2 style="font-size:24px; text-transform:uppercase; margin:0 0 15px; border-bottom:2px solid #fff; display:inline-block;">Custo Zero Real</h2>
+        <p style="font-size:16px; line-height:1.5; margin-bottom:20px;">Minha arquitetura é projetada para eliminar mensalidades. Desenvolvimento eficiente e manutenção inexistente através de sistemas serverless.</p>
         <button class="aet-btn-ok">OK</button>
     `;
     overlay.appendChild(msgBox);
 
-    // 3. FÍSICA DA BOLA
-    let posX = 0, posY = 0;
-    let velX = 6, velY = 2;
-    let gravity = 0.5;
-    let bounce = 0.7;
-    let hasExploded = false;
+    // 3. FÍSICA
+    let posX = 0, posY = 0, velX = 6, velY = 2, gravity = 0.5, bounce = 0.7, hasExploded = false;
 
     function updatePhysics() {
         if (hasExploded) return;
-        velY += gravity;
-        posX += velX;
-        posY += velY;
-        const maxX = window.innerWidth - 30;
-        const maxY = window.innerHeight - 30;
+        velY += gravity; posX += velX; posY += velY;
+        const maxX = window.innerWidth - 30; const maxY = window.innerHeight - 30;
         if (posY > maxY) { posY = maxY; velY *= -bounce; velX *= 0.9; }
         if (posX > maxX || posX < 0) velX *= -1;
-        const distToCenter = Math.hypot(posX - window.innerWidth/2, posY - window.innerHeight/2);
-        if (distToCenter < 100 || (Math.abs(velY) < 1 && posY > maxY - 10)) {
-            explode();
-            return;
+        if (Math.hypot(posX - window.innerWidth/2, posY - window.innerHeight/2) < 100 || (Math.abs(velY) < 1 && posY > maxY - 10)) {
+            explode(); return;
         }
         ball.style.transform = `translate(${posX}px, ${posY}px)`;
         requestAnimationFrame(updatePhysics);
     }
 
     function explode() {
-        hasExploded = true;
-        ball.style.display = 'none';
+        hasExploded = true; ball.style.display = 'none';
         splatter.classList.add('active');
         setTimeout(() => msgBox.classList.add('active'), 400);
     }
 
-    // 4. AÇÃO DO BOTÃO OK E VOO DE PARTÍCULAS
+    // 4. AÇÃO OK E REVELAÇÃO CONTROLADA
     msgBox.querySelector('.aet-btn-ok').onclick = function() {
         msgBox.classList.remove('active');
         splatter.classList.add('retract');
+        
         const cards = document.querySelectorAll('.card');
         cards.forEach((card) => {
-            for (let i = 0; i < 5; i++) {
-                const p = document.createElement('div');
-                p.className = 'aet-particle';
-                p.style.left = '50%';
-                p.style.top = '50%';
-                document.body.appendChild(p);
-                const rect = card.getBoundingClientRect();
-                setTimeout(() => {
-                    p.style.left = (rect.left + rect.width / 2) + 'px';
-                    p.style.top = (rect.top + rect.height / 2) + 'px';
-                    p.style.transform = `scale(${Math.random() * 3})`;
-                    p.style.opacity = '0';
-                }, 50 + (i * 50));
-                setTimeout(() => p.remove(), 1500);
-            }
-            updateCardData(card);
+            // Cria os dados mas mantém ocultos
+            const dataDiv = updateCardData(card);
+            
+            // Simula o tempo de voo da partícula antes de revelar
+            setTimeout(() => {
+                if (dataDiv) dataDiv.classList.add('reveal');
+            }, 800);
         });
 
-        // Finalização: Esconde o overlay e limpa o estilo injetado
         setTimeout(() => {
-            overlay.classList.remove('visible');
-            overlay.style.display = 'none'; // Garante que saia da frente
-            styleElement.remove(); // Limpa o CSS da animação
+            overlay.style.display = 'none';
+            styleElement.remove();
             container.remove();
             splatter.remove();
             msgBox.remove();
@@ -162,7 +151,7 @@
     };
 
     function updateCardData(card) {
-        if (card.querySelector('.column-j-data')) return;
+        if (card.querySelector('.column-j-data')) return null;
         const infoJ = document.createElement('div');
         infoJ.className = 'column-j-data';
         infoJ.innerHTML = `
@@ -173,6 +162,7 @@
         const actions = card.querySelector('.actions');
         if (actions) card.insertBefore(infoJ, actions);
         else card.appendChild(infoJ);
+        return infoJ;
     }
 
     updatePhysics();
