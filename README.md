@@ -1,7 +1,7 @@
 <div align="center">
 
 # ARQUITETURA DE ENGAJAMENTO TEMPORAL
-
+Este repositório demonstra a aplicação prática dos conceitos da AET para otimização de conversão
 <br>
 
 <a href="https://wffukuta.github.io/arquitetura-engajamento-temporal/">
