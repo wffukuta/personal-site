@@ -1,1 +1,272 @@
+<script>
+(function () {
+  const animationStyleId = 'aet-ball-animation-styles';
+  const cardStyleId = 'aet-ball-card-styles';
+
+  function ensureStyle(id, cssText) {
+    let styleElement = document.getElementById(id);
+    if (!styleElement) {
+      styleElement = document.createElement('style');
+      styleElement.id = id;
+      document.head.appendChild(styleElement);
+    }
+    styleElement.textContent = cssText;
+    return styleElement;
+  }
+
+  function removeBySelector(selector) {
+    document.querySelectorAll(selector).forEach(element => element.remove());
+  }
+
+  function cleanupAnimationArtifacts() {
+    removeBySelector('.aet-physics-container, .aet-splatter-svg, .aet-message-box');
+    const overlay = document.getElementById('project-prompt-overlay');
+    if (overlay) overlay.classList.remove('aet-ball-active');
+    const animationStyle = document.getElementById(animationStyleId);
+    if (animationStyle) animationStyle.remove();
+  }
+
+  // Garante que uma execução anterior não deixe resíduos visuais.
+  cleanupAnimationArtifacts();
+
+  ensureStyle(
+    animationStyleId,
+    `
+      #project-prompt-overlay.aet-ball-active {
+        display: flex !important;
+        opacity: 1 !important;
+        overflow: hidden;
+        pointer-events: none;
+      }
+      #project-prompt-overlay.aet-ball-active .project-prompt-card { display: none !important; }
+
+      .aet-physics-container { position: absolute; inset: 0; pointer-events: none; z-index: 10; }
+
+      .aet-ball {
+        position: absolute;
+        width: 30px;
+        height: 30px;
+        background: #000;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        left: 0;
+        top: 0;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      }
+
+      .aet-splatter-svg {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        width: 600px;
+        height: 600px;
+        fill: #000;
+        transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+        z-index: 5;
+        pointer-events: auto;
+      }
+
+      .aet-splatter-svg.active { transform: translate(-50%, -50%) scale(1.5); }
+      .aet-splatter-svg.retract {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+        transition: all 0.5s ease-in;
+      }
+
+      .aet-message-box {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: min(500px, 80vw);
+        text-align: center;
+        color: #fff;
+        opacity: 0;
+        transition: opacity 0.5s ease;
+        z-index: 15;
+        pointer-events: none;
+        background: #000;
+        padding: 20px;
+        border: 2px solid #fff;
+      }
+
+      .aet-message-box.active { opacity: 1; pointer-events: auto; }
+
+      .aet-btn-ok {
+        background: #fff;
+        color: #000;
+        border: none;
+        padding: 10px 40px;
+        font-weight: 900;
+        cursor: pointer;
+        text-transform: uppercase;
+        box-shadow: 5px 5px 0 #333;
+        transition: all 0.2s;
+      }
+    `
+  );
+
+  ensureStyle(
+    cardStyleId,
+    `
+      .column-j-data {
+        margin-top: 15px;
+        border-top: 2px dashed #000;
+        padding-top: 10px;
+        font-size: 12px;
+        background: #f9f9f9;
+        padding: 8px;
+        overflow: hidden;
+      }
+
+      .column-j-data.aet-pending {
+        visibility: hidden;
+        height: 0;
+        opacity: 0;
+        margin-top: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        border-top: none;
+      }
+
+      .column-j-data.aet-reveal {
+        visibility: visible;
+        height: auto;
+        opacity: 1;
+        animation: slideUp 0.5s ease forwards;
+      }
+
+      @keyframes slideUp {
+        from { transform: translateY(10px); }
+        to { transform: translateY(0); }
+      }
+
+      .j-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
+      .j-val { font-weight: 700; color: #000; }
+    `
+  );
+
+  const overlay = document.getElementById('project-prompt-overlay');
+  if (!overlay) return;
+  overlay.classList.add('aet-ball-active');
+
+  const container = document.createElement('div');
+  container.className = 'aet-physics-container';
+  overlay.appendChild(container);
+
+  const ball = document.createElement('div');
+  ball.className = 'aet-ball';
+  container.appendChild(ball);
+
+  const splatter = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  splatter.setAttribute('viewBox', '0 0 100 100');
+  splatter.setAttribute('class', 'aet-splatter-svg');
+  splatter.innerHTML = '<path d="M50,10 Q60,5 70,15 T85,40 Q95,50 85,65 T65,85 Q50,95 35,85 T15,65 Q5,50 15,35 T35,10 Z" />';
+  overlay.appendChild(splatter);
+
+  const msgBox = document.createElement('div');
+  msgBox.className = 'aet-message-box';
+  msgBox.innerHTML = `
+    <h2 style="font-size:24px; text-transform:uppercase; margin:0 0 15px; border-bottom:2px solid #fff; display:inline-block;">Custo Zero Real</h2>
+    <p style="font-size:16px; line-height:1.5; margin-bottom:20px;">Minha arquitetura é projetada para eliminar mensalidades. Desenvolvimento eficiente e manutenção inexistente através de sistemas serverless.</p>
+    <button class="aet-btn-ok">OK</button>
+  `;
+  overlay.appendChild(msgBox);
+
+  let posX = 0;
+  let posY = 0;
+  let velX = 6;
+  let velY = 2;
+  const gravity = 0.5;
+  const bounce = 0.7;
+  let hasExploded = false;
+
+  function updateCardData(card) {
+    const existing = card.querySelector('.column-j-data');
+    if (existing) {
+      existing.classList.remove('aet-pending');
+      existing.classList.add('aet-reveal');
+      return existing;
+    }
+
+    const infoJ = document.createElement('div');
+    infoJ.className = 'column-j-data aet-pending';
+    infoJ.innerHTML = `
+      <div class="j-row"><span>MANUTENÇÃO:</span> <span class="j-val">R$ 0,00</span></div>
+      <div class="j-row"><span>SERVIDOR:</span> <span class="j-val">GRATUITO</span></div>
+      <div class="j-row"><span>ATUALIZAÇÃO:</span> <span class="j-val">AUTÔNOMA</span></div>
+    `;
+
+    const actions = card.querySelector('.actions');
+    if (actions) {
+      card.insertBefore(infoJ, actions);
+    } else {
+      card.appendChild(infoJ);
+    }
+
+    return infoJ;
+  }
+
+  function explode() {
+    hasExploded = true;
+    ball.style.display = 'none';
+    splatter.classList.add('active');
+    setTimeout(() => msgBox.classList.add('active'), 400);
+  }
+
+  function updatePhysics() {
+    if (hasExploded) return;
+
+    velY += gravity;
+    posX += velX;
+    posY += velY;
+
+    const maxX = window.innerWidth - 30;
+    const maxY = window.innerHeight - 30;
+
+    if (posY > maxY) {
+      posY = maxY;
+      velY *= -bounce;
+      velX *= 0.9;
+    }
+
+    if (posX > maxX || posX < 0) {
+      velX *= -1;
+    }
+
+    const reachedCenter = Math.hypot(posX - window.innerWidth / 2, posY - window.innerHeight / 2) < 100;
+    const stoppedNearGround = Math.abs(velY) < 1 && posY > maxY - 10;
+
+    if (reachedCenter || stoppedNearGround) {
+      explode();
+      return;
+    }
+
+    ball.style.transform = `translate(${posX}px, ${posY}px)`;
+    requestAnimationFrame(updatePhysics);
+  }
+
+  msgBox.querySelector('.aet-btn-ok').onclick = function () {
+    msgBox.classList.remove('active');
+    splatter.classList.add('retract');
+
+    document.querySelectorAll('.card').forEach(card => {
+      const dataDiv = updateCardData(card);
+      setTimeout(() => {
+        if (!dataDiv) return;
+        dataDiv.classList.remove('aet-pending');
+        dataDiv.classList.add('aet-reveal');
+      }, 800);
+    });
+
+    setTimeout(() => {
+      overlay.style.display = 'none';
+      cleanupAnimationArtifacts();
+    }, 1300);
+  };
+
+  updatePhysics();
+})();
+</script>
 
