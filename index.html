@@ -1505,6 +1505,7 @@ fetch(sheetURL)
       const linkProducao = (colunas[5] || '').trim();
       const githubLink = (colunas[7] || '').trim();
       const licenca = (colunas[8] || '').trim().toUpperCase();
+      const custos = (colunas[9] || '').trim();
       const licencaAberta = licenca === 'ABERTO' || licenca === 'ABERTA';
       const botaoLink = linkProducao
         ? `<a class="project-link" href="${linkProducao}" target="_blank" rel="noopener noreferrer">Acessar projeto</a>`
@@ -1535,6 +1536,7 @@ fetch(sheetURL)
       }
 
       card.className = `card ${classeSuporte}`.trim();
+      card.dataset.custos = custos;
       card.innerHTML = `
         <h2>${projeto}</h2>
         <div class="row"><strong>Gênero:</strong> ${genero}</div>
