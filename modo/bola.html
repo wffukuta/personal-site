@@ -21,6 +21,18 @@
     document.querySelectorAll(selector).forEach(element => element.remove());
   }
 
+  function parseCostBreakdown(rawValue) {
+    const defaults = ['R$0,00', 'R$0,00', 'R$0,00'];
+    if (!rawValue || typeof rawValue !== 'string') return defaults;
+
+    const parts = rawValue.split('/').map(part => part.trim()).filter(Boolean);
+    return [
+      parts[0] || defaults[0],
+      parts[1] || defaults[1],
+      parts[2] || defaults[2]
+    ];
+  }
+
   function cleanupAnimationArtifacts() {
     removeBySelector('.aet-physics-container, .aet-splatter-svg, .aet-message-box');
     const overlay = document.getElementById('project-prompt-overlay');
@@ -220,18 +232,24 @@
 
     // Inicia a animação nos cards
     document.querySelectorAll('.card').forEach((card, index) => {
+      const custoPlanilha = card.dataset.custos || '';
+      const [criacao, publicacao, manutencao] = parseCostBreakdown(custoPlanilha);
+
       // Cria o elemento se não existir
       let dataDiv = card.querySelector('.column-j-data');
       if (!dataDiv) {
         dataDiv = document.createElement('div');
         dataDiv.className = 'column-j-data aet-pending';
-        dataDiv.innerHTML = `
-          <div class="j-row"><span>MANUTENÇÃO:</span> <span class="j-val">R$ 0,00</span></div>
-          <div class="j-row"><span>SERVIDOR:</span> <span class="j-val">GRATUITO</span></div>
-        `;
+
         const actions = card.querySelector('.actions');
-        actions ? card.insertBefore(dataDiv, actions) : card.appendChild(dataDiv);
+        actions ? actions.insertAdjacentElement('afterend', dataDiv) : card.appendChild(dataDiv);
       }
+
+      dataDiv.innerHTML = `
+        <div class="j-row"><span>CRIAÇÃO:</span> <span class="j-val">${criacao}</span></div>
+        <div class="j-row"><span>PUBLICAÇÃO:</span> <span class="j-val">${publicacao}</span></div>
+        <div class="j-row"><span>MANUTENÇÃO:</span> <span class="j-val">${manutencao}</span></div>
+      `;
 
       // Delay cascata para os cards aparecerem
       setTimeout(() => {
