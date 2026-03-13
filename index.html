@@ -565,8 +565,8 @@
     }
 
     .modo-toggle.awaiting-project-prompt {
-      animation: questionPulseDark 1.6s ease-in-out infinite;
-      background: #1a1420;
+      animation: questionPulseDark 1.4s ease-in-out infinite;
+      background: #2f1c2a;
       box-shadow: 4px 4px 0 #000000, 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
     }
 
@@ -578,16 +578,29 @@
     @keyframes questionPulseDark {
       0%,
       100% {
-        background: #2a1a24;
-        border-color: #2f2430;
+        background: #4b1835;
+        border-color: #6b2b4c;
+        transform: translate(0, 0) translateZ(0);
       }
-      33% {
-        background: #2b2518;
-        border-color: #312b1f;
+      25% {
+        background: #4b3d12;
+        border-color: #6b581b;
+        transform: translate(-2px, -2px) translateZ(0);
       }
-      66% {
-        background: #18232f;
-        border-color: #1f2c3a;
+      50% {
+        background: #18304f;
+        border-color: #21456f;
+        transform: translate(2px, -2px) translateZ(0);
+      }
+      75% {
+        background: #3e1656;
+        border-color: #582076;
+        transform: translate(-2px, 2px) translateZ(0);
+      }
+      90% {
+        background: #1b3b58;
+        border-color: #295677;
+        transform: translate(2px, 2px) translateZ(0);
       }
     }
 
