@@ -573,6 +573,7 @@
       pointer-events: none;
       opacity: 0;
       transition: opacity 0.25s ease;
+      overflow: visible;
     }
 
     .modo-toggle.awaiting-project-prompt .modo-toggle__smoke {
@@ -582,14 +583,14 @@
     .modo-toggle__smoke span {
       position: absolute;
       bottom: 0;
-      width: 7px;
-      height: 7px;
-      background: rgba(226, 232, 255, 0.65);
-      border: 1px solid rgba(255, 255, 255, 0.5);
-      box-shadow: 0 0 8px rgba(203, 208, 255, 0.45);
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.22) 55%, rgba(0, 0, 0, 0) 100%);
+      filter: blur(1.2px);
       transform-origin: center;
-      transform: translate3d(0, 0, 0) scale(0.45);
-      animation: squareSmokeRise 1.7s ease-out infinite;
+      transform: translate3d(0, 0, 0) scale(0.5);
+      animation: smokeRise 3.6s cubic-bezier(0.25, 0.5, 0.2, 1) infinite;
     }
 
     .modo-toggle__smoke span:nth-child(1) { left: -18px; animation-delay: 0s; }
@@ -599,22 +600,25 @@
     .modo-toggle__smoke span:nth-child(5) { left: 13px; animation-delay: 0.9s; }
     .modo-toggle__smoke span:nth-child(6) { left: -14px; animation-delay: 1.12s; }
 
-    @keyframes squareSmokeRise {
+    @keyframes smokeRise {
       0% {
         opacity: 0;
-        transform: translate3d(0, 4px, 0) scale(0.35) rotate(0deg);
+        transform: translate3d(0, 8px, 0) scale(0.35);
       }
-      18% {
-        opacity: 0.8;
+      12% {
+        opacity: 0.5;
+      }
+      42% {
+        opacity: 0.35;
       }
       100% {
         opacity: 0;
-        transform: translate3d(3px, -42px, 0) scale(1.75) rotate(22deg);
+        transform: translate3d(10px, -80vh, 0) scale(2.5);
       }
     }
 
     .modo-toggle.awaiting-project-prompt {
-      animation: questionPulseDark 1.4s ease-in-out infinite;
+      animation: questionPulseDark 2.2s ease-in-out infinite;
       background: #2f1c2a;
       box-shadow: 4px 4px 0 #000000, 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
     }
@@ -627,29 +631,14 @@
     @keyframes questionPulseDark {
       0%,
       100% {
-        background: #4b1835;
-        border-color: #6b2b4c;
+        background: #1b1b1b;
+        border-color: #121212;
         transform: translate(0, 0) translateZ(0);
       }
-      25% {
-        background: #4b3d12;
-        border-color: #6b581b;
-        transform: translate(-2px, -2px) translateZ(0);
-      }
       50% {
-        background: #18304f;
-        border-color: #21456f;
-        transform: translate(2px, -2px) translateZ(0);
-      }
-      75% {
-        background: #3e1656;
-        border-color: #582076;
-        transform: translate(-2px, 2px) translateZ(0);
-      }
-      90% {
-        background: #1b3b58;
-        border-color: #295677;
-        transform: translate(2px, 2px) translateZ(0);
+        background: #050505;
+        border-color: #000000;
+        transform: translate(0, -1px) translateZ(0);
       }
     }
 
